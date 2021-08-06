@@ -1,0 +1,3 @@
+rootProject.name = "UUAndroidBluetooth"
+include ':app'
+include ':bluetooth'
