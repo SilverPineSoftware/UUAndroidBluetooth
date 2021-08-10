@@ -1,14 +1,13 @@
 package com.silverpine.uu.bluetooth;
 
 import android.bluetooth.BluetoothGatt;
-
-import com.silverpine.uu.core.UUString;
+import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
 
 import java.util.HashMap;
 import java.util.Locale;
 
-import androidx.annotation.NonNull;
-import androidx.annotation.Nullable;
+import com.silverpine.uu.core.UUString;
 
 /**
  * Container class for UUBluetooth errors
@@ -24,7 +23,7 @@ public class UUBluetoothError
     public static final String DETAIL_KEY_GATT_STATUS = "gattStatus";
 
     private Exception caughtException = null;
-    private UUBluetoothErrorCode errorCode;
+    private final UUBluetoothErrorCode errorCode;
     private final HashMap<String, String> errorDetails = new HashMap<>();
 
     /**
