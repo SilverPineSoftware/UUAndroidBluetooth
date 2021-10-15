@@ -1,5 +1,15 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project version="4">
+  <component name="DesignSurface">
+    <option name="filePathToZoomLevelMap">
+      <map>
+        <entry key="../../../../../../layout/compose-model-1633985847231.xml" value="0.3174812886619784" />
+        <entry key="app/src/main/res/layout/activity_scan.xml" value="0.32518115942028986" />
+        <entry key="app/src/main/res/layout/uu_peripheral_row.xml" value="0.23208864668896162" />
+        <entry key="app/src/main/res/menu/scan_menu.xml" value="0.3375" />
+      </map>
+    </option>
+  </component>
   <component name="ProjectRootManager" version="2" languageLevel="JDK_11" project-jdk-name="1.8" project-jdk-type="JavaSDK">
     <output url="file://$PROJECT_DIR$/build/classes" />
   </component>

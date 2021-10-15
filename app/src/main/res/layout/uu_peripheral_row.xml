@@ -1,0 +1,136 @@
+<?xml version="1.0" encoding="utf-8"?>
+<layout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools">
+
+    <data>
+        <variable
+            name="vm"
+            type="com.silverpine.uu.sample.bluetooth.viewmodel.UUPeripheralViewModel" />
+    </data>
+
+    <androidx.constraintlayout.widget.ConstraintLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:background="@android:color/transparent"
+        tools:background="@color/white">
+
+        <androidx.appcompat.widget.AppCompatTextView
+            android:id="@+id/friendlyNameLabel"
+            android:layout_width="0dp"
+            android:layout_height="0dp"
+            app:layout_constraintWidth_default="spread"
+            app:layout_constraintHeight_default="wrap"
+            android:textSize="20sp"
+            android:textStyle="bold"
+            android:textColor="@color/black"
+            android:gravity="start"
+            android:text="@{ vm.friendlyName }"
+            app:layout_constraintTop_toTopOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintEnd_toStartOf="@+id/connectionStateLabel"
+            app:layout_constraintBottom_toTopOf="@+id/addressLabel"
+            android:layout_marginTop="5dp"
+            android:layout_marginStart="20dp"
+            android:layout_marginEnd="20dp"
+            android:layout_marginBottom="0dp"
+            tools:text="My Bluetooth Widget"/>
+
+        <androidx.appcompat.widget.AppCompatTextView
+            android:id="@+id/addressLabel"
+            android:layout_width="0dp"
+            android:layout_height="0dp"
+            app:layout_constraintWidth_default="spread"
+            app:layout_constraintHeight_default="spread"
+            android:textSize="15sp"
+            android:textStyle="normal"
+            android:textColor="@color/black"
+            android:gravity="start"
+            android:text="@{ vm.macAddress }"
+            app:layout_constraintTop_toBottomOf="@+id/friendlyNameLabel"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintEnd_toStartOf="@+id/timeSinceLastUpdateLabel"
+            app:layout_constraintBottom_toBottomOf="parent"
+            android:layout_marginTop="0dp"
+            android:layout_marginStart="20dp"
+            android:layout_marginEnd="20dp"
+            android:layout_marginBottom="5dp"
+            tools:text="00:00:00:00:00:00"/>
+
+        <androidx.appcompat.widget.AppCompatTextView
+            android:id="@+id/connectionStateLabel"
+            android:layout_width="0dp"
+            android:layout_height="0dp"
+            app:layout_constraintWidth_default="wrap"
+            app:layout_constraintHeight_default="wrap"
+            android:textSize="15sp"
+            android:textStyle="normal"
+            android:textColor="@color/black"
+            android:gravity="end"
+            android:text="@{ vm.connectionState }"
+            app:layout_constraintBaseline_toBaselineOf="@+id/friendlyNameLabel"
+            app:layout_constraintStart_toEndOf="@+id/friendlyNameLabel"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintBottom_toTopOf="@+id/rssiLabel"
+            android:layout_marginTop="5dp"
+            android:layout_marginStart="0dp"
+            android:layout_marginEnd="20dp"
+            android:layout_marginBottom="0dp"
+            tools:text="Connected"/>
+
+        <androidx.appcompat.widget.AppCompatTextView
+            android:id="@+id/rssiLabel"
+            android:layout_width="0dp"
+            android:layout_height="0dp"
+            app:layout_constraintWidth_default="wrap"
+            app:layout_constraintHeight_default="wrap"
+            android:textSize="15sp"
+            android:textStyle="normal"
+            android:textColor="@color/black"
+            android:gravity="end"
+            android:text="@{ vm.rssi }"
+            app:layout_constraintTop_toBottomOf="@+id/connectionStateLabel"
+            app:layout_constraintEnd_toEndOf="@+id/connectionStateLabel"
+            app:layout_constraintBottom_toTopOf="@+id/timeSinceLastUpdateLabel"
+            android:layout_marginTop="0dp"
+            android:layout_marginStart="0dp"
+            android:layout_marginEnd="0dp"
+            android:layout_marginBottom="0dp"
+            app:flow_horizontalBias="1.0"
+            tools:text="-127"/>
+
+        <androidx.appcompat.widget.AppCompatTextView
+            android:id="@+id/timeSinceLastUpdateLabel"
+            android:layout_width="0dp"
+            android:layout_height="0dp"
+            app:layout_constraintWidth_default="wrap"
+            app:layout_constraintHeight_default="wrap"
+            android:textSize="15sp"
+            android:textStyle="normal"
+            android:textColor="@color/black"
+            android:gravity="end"
+            android:text="@{ vm.timeSinceLastUpdate }"
+            app:layout_constraintTop_toBottomOf="@+id/rssiLabel"
+            app:layout_constraintEnd_toEndOf="@+id/connectionStateLabel"
+            app:layout_constraintBottom_toBottomOf="parent"
+            android:layout_marginTop="0dp"
+            android:layout_marginStart="0dp"
+            android:layout_marginEnd="0dp"
+            android:layout_marginBottom="5dp"
+            tools:text="00:00:00"/>
+
+        <View android:id="@+id/separator"
+            android:layout_width="match_parent"
+            android:layout_height="1dp"
+            android:layout_marginStart="20dp"
+            android:layout_marginEnd="20dp"
+            android:background="#000"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintBottom_toBottomOf="parent" />
+
+    </androidx.constraintlayout.widget.ConstraintLayout>
+
+</layout>
+

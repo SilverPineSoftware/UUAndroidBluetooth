@@ -9,4 +9,15 @@
 
     <string name="hello_first_fragment">Hello first fragment</string>
     <string name="hello_second_fragment">Hello second fragment. Arg: %1$s</string>
+    <string name="title_activity_home">HomeActivity</string>
+
+    <string name="start">Start</string>
+    <string name="stop">Stop</string>
+
+
+    <string name="permissions" formatted="false">Permissions</string>
+    <string name="location_permission_request_message" formatted="false">In order to use Bluetooth to scan for BLE peripherals, the application needs permission to access the phone\'s location.  Tap \'Request\' below, and then tap Allow on the next dialog.</string>
+    <string name="request_permission" formatted="false">Request</string>
+    <string name="location_permission_denied_message" formatted="false">In order to use Bluetooth to interact with BLE peripherals, the application needs permission to access the phone\'s location. Tap \'App Settings\' below, and then enable location permissions for the app.</string>
+    <string name="app_settings" formatted="false">App Settings</string>
 </resources>
