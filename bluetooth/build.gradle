@@ -15,7 +15,6 @@ apply from: "../uu-build-common.gradle"
 
 android {
     compileSdkVersion 30
-    buildToolsVersion "30.0.3"
 
     defaultConfig {
         minSdkVersion 26
