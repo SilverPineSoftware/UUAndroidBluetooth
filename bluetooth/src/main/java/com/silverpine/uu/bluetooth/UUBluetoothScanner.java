@@ -13,6 +13,7 @@ import android.bluetooth.le.ScanSettings;
 import android.content.Context;
 import android.os.Build;
 import android.os.ParcelUuid;
+import android.util.Log;
 
 import com.silverpine.uu.core.UUListDelegate;
 import com.silverpine.uu.core.UUThread;
@@ -30,7 +31,7 @@ import androidx.annotation.Nullable;
 //@SuppressWarnings("unused")
 public class UUBluetoothScanner //implements BluetoothAdapter.LeScanCallback
 {
-    private static boolean LOGGING_ENABLED = UULog.LOGGING_ENABLED;
+    private static boolean LOGGING_ENABLED = true;//UULog.LOGGING_ENABLED;
 
 //    public interface Listener
 //    {
@@ -479,7 +480,7 @@ public class UUBluetoothScanner //implements BluetoothAdapter.LeScanCallback
     {
         if (LOGGING_ENABLED)
         {
-            UULog.debug(UUBluetoothScanner.class, method, message);
+            Log.d("UUBluetoothScanner", method + ": " + message);
         }
     }
 
@@ -487,7 +488,7 @@ public class UUBluetoothScanner //implements BluetoothAdapter.LeScanCallback
     {
         if (LOGGING_ENABLED)
         {
-            UULog.debug(UUBluetoothScanner.class, method, exception);
+            Log.d("UUBluetoothScanner", method + ": " + exception.toString());
         }
     }
 }
