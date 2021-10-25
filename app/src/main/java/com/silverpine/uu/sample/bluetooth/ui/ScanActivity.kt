@@ -1,16 +1,9 @@
 package com.silverpine.uu.sample.bluetooth.ui
 
 import android.Manifest
-import android.app.Activity
-import android.app.AlertDialog
-import android.content.Context
-import android.content.Intent
-import android.net.Uri
 import android.os.Bundle
-import android.provider.Settings
 import android.view.Menu
 import android.view.MenuItem
-import androidx.annotation.StringRes
 import androidx.appcompat.app.AppCompatActivity
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
@@ -18,10 +11,11 @@ import com.silverpine.uu.bluetooth.UUBluetoothScanner
 import com.silverpine.uu.bluetooth.UUPeripheral
 import com.silverpine.uu.bluetooth.UUPeripheralFilter
 import com.silverpine.uu.core.UUPermissions
-import com.silverpine.uu.core.UUString
 import com.silverpine.uu.core.UUThread
 import com.silverpine.uu.sample.bluetooth.R
 import com.silverpine.uu.sample.bluetooth.adapter.PeripheralRowAdapter
+import com.silverpine.uu.ux.uuOpenSystemSettings
+import com.silverpine.uu.ux.uuPrompt
 
 class ScanActivity : AppCompatActivity()
 {
@@ -184,69 +178,12 @@ class ScanActivity : AppCompatActivity()
     {
         override fun shouldDiscoverPeripheral(peripheral: UUPeripheral): UUPeripheralFilter.Result
         {
-            if (UUString.isEmpty(peripheral.name))
-            {
-                return UUPeripheralFilter.Result.IgnoreOnce
-            }
+            //if (UUString.isEmpty(peripheral.name))
+            //{
+            //    return UUPeripheralFilter.Result.IgnoreOnce
+            //}
 
             return UUPeripheralFilter.Result.Discover
         }
     }
-}
-
-
-
-// TODO: Move this into a core UI/UI package
-fun Context.uuPrompt(
-    @StringRes title: Int = -1,
-    @StringRes message: Int,
-    @StringRes positiveButtonTextId: Int,
-    @StringRes negativeButtonTextId: Int = -1,
-    cancelable: Boolean = true,
-    positiveAction: () -> Unit = { },
-    negativeAction: () -> Unit = { })
-{
-    val builder = AlertDialog.Builder(this)
-    builder.setCancelable(cancelable)
-
-    if (title != -1)
-    {
-        builder.setTitle(title)
-    }
-
-    if (message != -1)
-    {
-        builder.setMessage(message)
-    }
-
-    if (positiveButtonTextId != -1)
-    {
-        builder.setPositiveButton(positiveButtonTextId)
-        { dialog, _ ->
-            dialog.cancel()
-            positiveAction()
-        }
-    }
-
-    if (negativeButtonTextId != -1)
-    {
-        builder.setNegativeButton(negativeButtonTextId)
-        { dialog, _ ->
-            dialog.cancel()
-            negativeAction()
-        }
-    }
-
-    val dialog = builder.create()
-    dialog.show()
-}
-
-// TODO: Move this into a core UI/UI package
-fun Activity.uuOpenSystemSettings()
-{
-    val intent = Intent()
-    intent.action = Settings.ACTION_APPLICATION_DETAILS_SETTINGS
-    val uri = Uri.fromParts("package", packageName, null)
-    intent.data = uri
-    startActivity(intent)
 }
