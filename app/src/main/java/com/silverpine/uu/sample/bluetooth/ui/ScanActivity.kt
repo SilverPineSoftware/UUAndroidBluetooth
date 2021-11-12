@@ -3,10 +3,6 @@ package com.silverpine.uu.sample.bluetooth.ui
 import android.Manifest
 import android.content.Intent
 import android.os.Bundle
-import android.view.Menu
-import android.view.MenuItem
-import androidx.appcompat.app.AppCompatActivity
-import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.silverpine.uu.bluetooth.UUBluetoothScanner
 import com.silverpine.uu.bluetooth.UUPeripheral
@@ -15,28 +11,29 @@ import com.silverpine.uu.core.UUPermissions
 import com.silverpine.uu.core.UUThread
 import com.silverpine.uu.sample.bluetooth.R
 import com.silverpine.uu.sample.bluetooth.adapter.PeripheralRowAdapter
+import com.silverpine.uu.ux.UUMenuHandler
 import com.silverpine.uu.ux.uuOpenSystemSettings
 import com.silverpine.uu.ux.uuPrompt
+import com.silverpine.uu.ux.uuSetAsActionAlways
 
-class ScanActivity : AppCompatActivity()
+class ScanActivity: RecyclerActivity()
 {
-    private var adapter: PeripheralRowAdapter? = null
-    private var scanner: UUBluetoothScanner? = null
+    private lateinit var adapter: PeripheralRowAdapter
+    private lateinit var scanner: UUBluetoothScanner
 
     private var lastUpdate: Long = 0
 
     override fun onCreate(savedInstanceState: Bundle?)
     {
         super.onCreate(savedInstanceState)
-        setContentView(R.layout.activity_scan)
-
-        adapter = PeripheralRowAdapter(applicationContext, this::handlePeripheralClicked)
-
-        val recyclerView = findViewById<RecyclerView>(R.id.recyclerView)
-        recyclerView.adapter = adapter
-        recyclerView.layoutManager = LinearLayoutManager(this)
 
         scanner = UUBluetoothScanner(applicationContext, null)
+    }
+
+    override fun setupAdapter(recyclerView: RecyclerView)
+    {
+        adapter = PeripheralRowAdapter(applicationContext, this::handlePeripheralClicked)
+        recyclerView.adapter = adapter
     }
 
     override fun onResume()
@@ -46,51 +43,41 @@ class ScanActivity : AppCompatActivity()
         refreshPermissions()
     }
 
-    override fun onCreateOptionsMenu(menu: Menu?): Boolean
+    override fun populateMenu(menuHandler: UUMenuHandler)
     {
-        menuInflater.inflate(R.menu.scan_menu, menu)
-        return true
-    }
-
-    override fun onOptionsItemSelected(item: MenuItem): Boolean
-    {
-        if (item.itemId == R.id.action_start_scan)
+        if (scanner.isScanning)
         {
-            startScanning()
-            return true
+            menuHandler.addAction(R.string.stop, this::stopScanning)
         }
-
-        if (item.itemId == R.id.action_stop_scan)
+        else
         {
-            stopScanning()
-            return true
+            menuHandler.addAction(R.string.start, this::startScanning)
         }
-
-        return super.onOptionsItemSelected(item)
     }
 
     private fun startScanning()
     {
-        scanner?.startScanning<UUPeripheral>(null, arrayListOf(PeripheralFilter()))
+        scanner.startScanning<UUPeripheral>(null, arrayListOf(PeripheralFilter()))
         { list ->
 
             val timeSinceLastUpdate = System.currentTimeMillis() - this.lastUpdate
             if (timeSinceLastUpdate > 300)
             {
                 UUThread.runOnMainThread {
-                    adapter?.update(list)
+                    adapter.update(list)
                 }
 
                 lastUpdate = System.currentTimeMillis()
             }
-
-
         }
+
+        invalidateOptionsMenu()
     }
 
     private fun stopScanning()
     {
-        scanner?.stopScanning()
+        scanner.stopScanning()
+        invalidateOptionsMenu()
     }
 
     private fun handlePeripheralClicked(peripheral: UUPeripheral)
