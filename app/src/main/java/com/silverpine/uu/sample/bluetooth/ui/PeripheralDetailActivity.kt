@@ -1,32 +1,28 @@
 package com.silverpine.uu.sample.bluetooth.ui
 
-import android.Manifest
-import androidx.appcompat.app.AppCompatActivity
+import android.content.Intent
 import android.os.Bundle
-import android.view.Menu
-import android.view.MenuItem
+import android.os.Parcelable
+import android.util.Log
+import android.widget.Toast
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
-import com.silverpine.uu.bluetooth.UUBluetoothScanner
+import com.silverpine.uu.bluetooth.UUDiscoverServicesDelegate
 import com.silverpine.uu.bluetooth.UUPeripheral
-import com.silverpine.uu.bluetooth.UUPeripheralFilter
-import com.silverpine.uu.core.UUPermissions
-import com.silverpine.uu.core.UUThread
+import com.silverpine.uu.core.UUObjectDelegate
 import com.silverpine.uu.sample.bluetooth.R
-import com.silverpine.uu.sample.bluetooth.adapter.PeripheralRowAdapter
 import com.silverpine.uu.sample.bluetooth.adapter.ServiceRowAdapter
-import com.silverpine.uu.ux.uuOpenSystemSettings
-import com.silverpine.uu.ux.uuPrompt
+import com.silverpine.uu.ux.UUMenuHandler
 
-class PeripheralDetailActivity : AppCompatActivity()
+class PeripheralDetailActivity : UUAppCompatActivity(layoutResourceId = R.layout.activity_peripheral_detail)
 {
     private var adapter: ServiceRowAdapter? = null
+
     private var peripheral: UUPeripheral? = null
 
     override fun onCreate(savedInstanceState: Bundle?)
     {
         super.onCreate(savedInstanceState)
-        setContentView(R.layout.activity_peripheral_detail)
 
         adapter = ServiceRowAdapter(applicationContext)
 
@@ -34,19 +30,9 @@ class PeripheralDetailActivity : AppCompatActivity()
         recyclerView.adapter = adapter
         recyclerView.layoutManager = LinearLayoutManager(this)
 
-        peripheral = intent.extras?.getParcelable("peripheral")
+        peripheral = intent.uuRequireParcelable("peripheral")
 
-        title = "Peripheral Detail"
-
-        peripheral?.let {
-            title = it.name
-        } ?: run {
-            title = "Unknown"
-        }
-
-
-        //title = peripheral?.name ?: (peripheral?.address ?: "Unknown" )
-
+        title = peripheral?.name
     }
 
     override fun onResume()
@@ -55,26 +41,77 @@ class PeripheralDetailActivity : AppCompatActivity()
 
     }
 
-    override fun onCreateOptionsMenu(menu: Menu?): Boolean
+    override fun populateMenu(menuHandler: UUMenuHandler)
     {
-        menuInflater.inflate(R.menu.scan_menu, menu)
-        return true
+        if (peripheral!!.getConnectionState(applicationContext) == UUPeripheral.ConnectionState.Connected)
+        {
+            menuHandler.add(R.string.disconnect, this::handleDisconnect)
+            menuHandler.add(R.string.discover_services, this::handleDiscoverServices)
+        }
+        else
+        {
+            menuHandler.add(R.string.connect, this::handleConnect)
+        }
     }
 
-    override fun onOptionsItemSelected(item: MenuItem): Boolean
+    private fun handleConnect()
     {
-        if (item.itemId == R.id.action_start_scan)
+        peripheral!!.connect(60000, 10000, {
+
+            Log.d("LOG", "Peripheral connected")
+            uuShowToast("Connected")
+
+        }, UUObjectDelegate
+        { disconnectError ->
+
+            uuShowToast("Disconnected")
+
+            Log.d("LOG", "Peripheral disconnected")
+        })
+        /*
+        UUBluetooth.connectPeripheral(applicationContext, peripheral!!, true, 10000, 10000, object: UUConnectionDelegate
         {
-            //startScanning()
-            return true
+            override fun onConnected(peripheral: UUPeripheral)
+            {
+                Log.d("LOG", "Peripheral connected")
+                updatePeripheral(peripheral)
+            }
+
+            override fun onDisconnected(peripheral: UUPeripheral, error: UUBluetoothError?)
+            {
+                Log.d("LOG", "Peripheral disconnected")
+                updatePeripheral(peripheral)
+            }
+        })*/
+    }
+
+    private fun handleDiscoverServices()
+    {
+        peripheral!!.discoverServices(60000)
+        { services, error ->
+            uuShowToast("Found ${services?.size ?: 0} services")
         }
 
-        if (item.itemId == R.id.action_stop_scan)
-        {
-            //stopScanning()
-            return true
-        }
+    }
 
-        return super.onOptionsItemSelected(item)
+    private fun handleDisconnect()
+    {
+        peripheral!!.disconnect(null)
+        //UUBluetooth.disconnectPeripheral(peripheral!!)
+        //invalidateOptionsMenu()
+
+    }
+}
+
+fun <T: Parcelable> Intent.uuRequireParcelable(key: String): T
+{
+    val obj = extras?.getParcelable<T>(key)
+    if (obj == null)
+    {
+        throw RuntimeException("Expected extra with key $key to be non-nil.")
+    }
+    else
+    {
+        return obj
     }
 }

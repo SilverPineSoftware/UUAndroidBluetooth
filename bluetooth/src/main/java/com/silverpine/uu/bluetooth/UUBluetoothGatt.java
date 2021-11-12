@@ -42,9 +42,10 @@ class UUBluetoothGatt
 
     private static final int TIMEOUT_DISABLED = -1;
 
-    private UUPeripheral peripheral;
+    private final Context context;
+    private final UUPeripheral peripheral;
     private BluetoothGatt bluetoothGatt;
-    private BluetoothGattCallback bluetoothGattCallback;
+    private final BluetoothGattCallback bluetoothGattCallback;
 
     private UUConnectionDelegate connectionDelegate;
     private UUPeripheralErrorDelegate serviceDiscoveryDelegate;
@@ -62,8 +63,9 @@ class UUBluetoothGatt
 
     private long disconnectTimeout = 0;
 
-    UUBluetoothGatt(final @NonNull UUPeripheral peripheral)
+    UUBluetoothGatt(@NonNull final Context context, @NonNull final UUPeripheral peripheral)
     {
+        this.context = context;
         this.peripheral = peripheral;
         bluetoothGattCallback = new UUBluetoothGattCallback();
     }
@@ -80,7 +82,6 @@ class UUBluetoothGatt
     }
 
     void connect(
-        final @NonNull Context context,
         final boolean connectGattAutoFlag,
         final long timeout,
         final long disconnectTimeout,
@@ -127,21 +128,9 @@ class UUBluetoothGatt
                 debugLog("connect", "Connecting to: " + peripheral + ", gattAuto: " + connectGattAutoFlag);
 
                 disconnectError = null;
-                connectGatt(context, peripheral.getBluetoothDevice(), connectGattAutoFlag);
+                bluetoothGatt = peripheral.getBluetoothDevice().connectGatt(context, connectGattAutoFlag, bluetoothGattCallback, BluetoothDevice.TRANSPORT_LE);
             }
         });
-    }
-
-    private void connectGatt(@NonNull final Context context, @NonNull final BluetoothDevice device, final boolean connectGattAutoFlag)
-    {
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M)
-        {
-            bluetoothGatt = device.connectGatt(context, connectGattAutoFlag, bluetoothGattCallback, BluetoothDevice.TRANSPORT_LE);
-        }
-        else
-        {
-            bluetoothGatt = device.connectGatt(context, connectGattAutoFlag, bluetoothGattCallback);
-        }
     }
 
     void disconnect(@Nullable final UUBluetoothError error)
@@ -1353,5 +1342,36 @@ class UUBluetoothGatt
 
             notifyReadRssiComplete(UUBluetoothError.gattStatusError("onReadRemoteRssi", status));
         }
+    }
+
+
+    ////////////////////////////////////////////////////////////////////////////////////////////////
+    // Static Gatt management
+    ////////////////////////////////////////////////////////////////////////////////////////////////
+    private static final HashMap<String, UUBluetoothGatt> gattHashMap = new HashMap<>();
+
+    @Nullable
+    static UUBluetoothGatt gattForPeripheral(final @NonNull UUPeripheral peripheral)
+    {
+        Context ctx = UUBluetooth.requireApplicationContext();
+
+        UUBluetoothGatt gatt = null;
+
+        String address = peripheral.getAddress();
+        if (UUString.isNotEmpty(address))
+        {
+            if (gattHashMap.containsKey(address))
+            {
+                gatt = gattHashMap.get(address);
+            }
+
+            if (gatt == null)
+            {
+                gatt = new UUBluetoothGatt(ctx, peripheral);
+                gattHashMap.put(address, gatt);
+            }
+        }
+
+        return gatt;
     }
 }

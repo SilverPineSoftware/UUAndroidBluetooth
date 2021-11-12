@@ -2,7 +2,6 @@ package com.silverpine.uu.bluetooth;
 
 import android.bluetooth.BluetoothGattCharacteristic;
 import android.bluetooth.BluetoothGattService;
-import android.content.Context;
 
 import com.silverpine.uu.core.UUNonNullObjectDelegate;
 import com.silverpine.uu.core.UUObjectDelegate;
@@ -16,9 +15,8 @@ import androidx.annotation.Nullable;
 
 public class UUPeripheralOperation<T extends UUPeripheral>
 {
-    private final @NonNull Context applicationContext;
     private final @NonNull T peripheral;
-    private @Nullable UUBluetoothError operationError;
+    //private @Nullable UUBluetoothError operationError;
     private @Nullable UUObjectDelegate<UUBluetoothError> operationCallback;
     private final @NonNull ArrayList<BluetoothGattService> discoveredServices = new ArrayList<>();
     private final @NonNull ArrayList<BluetoothGattCharacteristic> discoveredCharacteristics = new ArrayList<>();
@@ -31,9 +29,8 @@ public class UUPeripheralOperation<T extends UUPeripheral>
     private final @NonNull ArrayList<UUID> servicesToDiscover = new ArrayList<>();
 
 
-    UUPeripheralOperation(@NonNull final Context applicationContext, @NonNull final T peripheral)
+    UUPeripheralOperation(@NonNull final T peripheral)
     {
-        this.applicationContext = applicationContext;
         this.peripheral = peripheral;
     }
 
@@ -144,30 +141,15 @@ public class UUPeripheralOperation<T extends UUPeripheral>
 
     public final void start(UUObjectDelegate<UUBluetoothError> completion)
     {
-        operationError = null;
         operationCallback = completion;
 
-        UUBluetooth.connectPeripheral(applicationContext, peripheral, false, connectTimeout, disconnectTimeout, new UUConnectionDelegate()
-        {
-            @Override
-            public void onConnected(@NonNull UUPeripheral peripheral)
-            {
-                handleConnected();
-            }
-
-            @Override
-            public void onDisconnected(@NonNull UUPeripheral peripheral, @Nullable UUBluetoothError error)
-            {
-                handleDisconnection(error);
-            }
-        });
+        peripheral.connect(connectTimeout, disconnectTimeout, this::handleConnected, this::handleDisconnection);
     }
 
     public void end(@Nullable final UUBluetoothError error)
     {
         //NSLog("**** Ending Operation with error: \(error?.localizedDescription ?? "nil")")
-        operationError = error;
-        UUBluetooth.disconnectPeripheral(peripheral);
+        peripheral.disconnect(error);
     }
 
     protected void execute(@NonNull final UUObjectDelegate<UUBluetoothError> completion)
@@ -207,16 +189,9 @@ public class UUPeripheralOperation<T extends UUPeripheral>
 
     private void handleDisconnection(@Nullable final UUBluetoothError disconnectError)
     {
-        if (operationError == null)
-        {
-            operationError = disconnectError;
-        }
-
         UUObjectDelegate<UUBluetoothError> callback = operationCallback;
-        UUBluetoothError err = operationError;
         operationCallback = null;
-        operationError = null;
-        UUObjectDelegate.safeInvoke(callback, err);
+        UUObjectDelegate.safeInvoke(callback, disconnectError);
     }
 
     private void discoverNextCharacteristics()

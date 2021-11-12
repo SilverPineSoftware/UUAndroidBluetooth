@@ -13,13 +13,12 @@ import android.os.Parcelable;
 import android.util.Log;
 
 import com.silverpine.uu.core.UUData;
+import com.silverpine.uu.core.UUObjectDelegate;
 import com.silverpine.uu.core.UUParcel;
 import com.silverpine.uu.core.UUString;
-import com.silverpine.uu.logging.UULog;
 
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.List;
 import java.util.Locale;
 import java.util.Objects;
 
@@ -239,7 +238,7 @@ public class UUPeripheral implements Parcelable
         int state = bluetoothManager.getConnectionState(device, BluetoothProfile.GATT);
         debugLog("getConnectionState", "Actual connection state is: " + state + " (" + ConnectionState.fromProfileConnectionState(state) + ")");
 
-        UUBluetoothGatt gatt = UUBluetooth.gattForPeripheral(this);
+        UUBluetoothGatt gatt = UUBluetoothGatt.gattForPeripheral(this);
 
         if (gatt != null)
         {
@@ -265,29 +264,67 @@ public class UUPeripheral implements Parcelable
 
     public void requestHighPriority(@NonNull final UUPeripheralBoolDelegate delegate)
     {
-        UUBluetoothGatt gatt = UUBluetooth.gattForPeripheral(this);
+        UUBluetoothGatt gatt = UUBluetoothGatt.gattForPeripheral(this);
         if (gatt != null)
         {
             gatt.requestHighPriority(delegate);
         }
     }
 
-    public void discoverServices(
-            final long timeout,
-            final @NonNull UUPeripheralErrorDelegate delegate)
+    public void connect(
+        final long connectTimeout,
+        final long disconnectTimeout,
+        @NonNull final Runnable connected,
+        @NonNull final UUObjectDelegate<UUBluetoothError> disconnected)
     {
-        UUBluetoothGatt gatt = UUBluetooth.gattForPeripheral(this);
+        UUBluetoothGatt gatt = UUBluetoothGatt.gattForPeripheral(this);
         if (gatt != null)
         {
-            gatt.discoverServices(timeout, delegate);
+            gatt.connect(false, connectTimeout, disconnectTimeout, new UUConnectionDelegate()
+            {
+                @Override
+                public void onConnected(@NonNull UUPeripheral peripheral)
+                {
+                    connected.run();
+                }
+
+                @Override
+                public void onDisconnected(@NonNull UUPeripheral peripheral, @Nullable UUBluetoothError error)
+                {
+                    UUObjectDelegate.safeInvoke(disconnected, error);
+                }
+            });
         }
     }
 
-    public @NonNull List<BluetoothGattService> discoveredServices()
+    public void disconnect(@Nullable final UUBluetoothError error)
+    {
+        UUBluetoothGatt gatt = UUBluetoothGatt.gattForPeripheral(this);
+        if (gatt != null)
+        {
+            gatt.disconnect(error);
+        }
+    }
+
+    public void discoverServices(
+            final long timeout,
+            final @NonNull UUDiscoverServicesDelegate delegate)
+    {
+        UUBluetoothGatt gatt = UUBluetoothGatt.gattForPeripheral(this);
+        if (gatt != null)
+        {
+            gatt.discoverServices(timeout, (peripheral, error) ->
+            {
+                delegate.onCompleted(discoveredServices(), error);
+            });
+        }
+    }
+
+    public @NonNull ArrayList<BluetoothGattService> discoveredServices()
     {
         acquireExistingGatt();
 
-        List<BluetoothGattService> list = new ArrayList<>();
+        ArrayList<BluetoothGattService> list = new ArrayList<>();
 
         if (bluetoothGatt != null)
         {
@@ -304,7 +341,7 @@ public class UUPeripheral implements Parcelable
             final @Nullable UUCharacteristicDelegate notifyDelegate,
             final @NonNull UUCharacteristicDelegate delegate)
     {
-        UUBluetoothGatt gatt = UUBluetooth.gattForPeripheral(this);
+        UUBluetoothGatt gatt = UUBluetoothGatt.gattForPeripheral(this);
         if (gatt != null)
         {
             gatt.setNotifyState(characteristic, notifyState, timeout, notifyDelegate, delegate);
@@ -316,7 +353,7 @@ public class UUPeripheral implements Parcelable
             final long timeout,
             final @NonNull UUCharacteristicDelegate delegate)
     {
-        UUBluetoothGatt gatt = UUBluetooth.gattForPeripheral(this);
+        UUBluetoothGatt gatt = UUBluetoothGatt.gattForPeripheral(this);
         if (gatt != null)
         {
             gatt.readCharacteristic(characteristic, timeout, delegate);
@@ -328,7 +365,7 @@ public class UUPeripheral implements Parcelable
             final long timeout,
             final @NonNull UUDescriptorDelegate delegate)
     {
-        UUBluetoothGatt gatt = UUBluetooth.gattForPeripheral(this);
+        UUBluetoothGatt gatt = UUBluetoothGatt.gattForPeripheral(this);
         if (gatt != null)
         {
             gatt.readDescriptor(descriptor, timeout, delegate);
@@ -341,7 +378,7 @@ public class UUPeripheral implements Parcelable
             final long timeout,
             final @NonNull UUDescriptorDelegate delegate)
     {
-        UUBluetoothGatt gatt = UUBluetooth.gattForPeripheral(this);
+        UUBluetoothGatt gatt = UUBluetoothGatt.gattForPeripheral(this);
         if (gatt != null)
         {
             gatt.writeDescriptor(descriptor, data, timeout, delegate);
@@ -354,7 +391,7 @@ public class UUPeripheral implements Parcelable
             final long timeout,
             final @NonNull UUCharacteristicDelegate delegate)
     {
-        UUBluetoothGatt gatt = UUBluetooth.gattForPeripheral(this);
+        UUBluetoothGatt gatt = UUBluetoothGatt.gattForPeripheral(this);
         if (gatt != null)
         {
             gatt.writeCharacteristic(characteristic, data, timeout, delegate);
@@ -367,7 +404,7 @@ public class UUPeripheral implements Parcelable
             final long timeout,
             final @NonNull UUCharacteristicDelegate delegate)
     {
-        UUBluetoothGatt gatt = UUBluetooth.gattForPeripheral(this);
+        UUBluetoothGatt gatt = UUBluetoothGatt.gattForPeripheral(this);
         if (gatt != null)
         {
             gatt.writeCharacteristicWithoutResponse(characteristic, data, timeout, delegate);
@@ -378,7 +415,7 @@ public class UUPeripheral implements Parcelable
             final long timeout,
             final @NonNull UUPeripheralErrorDelegate delegate)
     {
-        UUBluetoothGatt gatt = UUBluetooth.gattForPeripheral(this);
+        UUBluetoothGatt gatt = UUBluetoothGatt.gattForPeripheral(this);
         if (gatt != null)
         {
             gatt.readRssi(timeout, delegate);
@@ -387,7 +424,7 @@ public class UUPeripheral implements Parcelable
 
     public void startRssiPolling(@NonNull final Context context, final long interval, @NonNull final UUPeripheralDelegate delegate)
     {
-        UUBluetoothGatt gatt = UUBluetooth.gattForPeripheral(this);
+        UUBluetoothGatt gatt = UUBluetoothGatt.gattForPeripheral(this);
         if (gatt != null)
         {
             gatt.startRssiPolling(context, interval, delegate);
@@ -396,7 +433,7 @@ public class UUPeripheral implements Parcelable
 
     public void stopRssiPolling()
     {
-        UUBluetoothGatt gatt = UUBluetooth.gattForPeripheral(this);
+        UUBluetoothGatt gatt = UUBluetoothGatt.gattForPeripheral(this);
         if (gatt != null)
         {
             gatt.stopRssiPolling();
@@ -407,7 +444,7 @@ public class UUPeripheral implements Parcelable
     {
         boolean isPolling = false;
 
-        UUBluetoothGatt gatt = UUBluetooth.gattForPeripheral(this);
+        UUBluetoothGatt gatt = UUBluetoothGatt.gattForPeripheral(this);
         if (gatt != null)
         {
             isPolling = gatt.isPollingForRssi();
@@ -423,7 +460,7 @@ public class UUPeripheral implements Parcelable
 
     public void cancelAllTimers()
     {
-        UUBluetoothGatt gatt = UUBluetooth.gattForPeripheral(this);
+        UUBluetoothGatt gatt = UUBluetoothGatt.gattForPeripheral(this);
         if (gatt != null)
         {
             gatt.cancelAllTimers();
@@ -692,7 +729,7 @@ public class UUPeripheral implements Parcelable
 
     private void acquireExistingGatt()
     {
-        UUBluetoothGatt gatt = UUBluetooth.gattForPeripheral(this);
+        UUBluetoothGatt gatt = UUBluetoothGatt.gattForPeripheral(this);
         if (gatt != null)
         {
             setBluetoothGatt(gatt.getBluetoothGatt());

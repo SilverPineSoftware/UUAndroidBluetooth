@@ -18,8 +18,8 @@ import com.silverpine.uu.logging.UULog;
 
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.HashMap;
 import java.util.Locale;
+import java.util.Objects;
 import java.util.UUID;
 
 import androidx.annotation.NonNull;
@@ -525,62 +525,31 @@ public class UUBluetooth
     }
 
     ////////////////////////////////////////////////////////////////////////////////////////////////
-    // Shared Bluetooth Gatt management
+    // Static Initialization
     ////////////////////////////////////////////////////////////////////////////////////////////////
-    private static final HashMap<String, UUBluetoothGatt> gattHashMap = new HashMap<>();
+    private static Context applicationContext;
 
-    @Nullable
-    static UUBluetoothGatt gattForPeripheral(final @NonNull UUPeripheral peripheral)
+    /**
+     * One time library initialization.  Must be called prior to using any other UUAndroidBluetooth
+     * classes or methods.  Pass an applicationContext only.
+     *
+     * @param applicationContext application context
+     */
+    public static void init(@NonNull final Context applicationContext)
     {
-        UUBluetoothGatt gatt = null;
-
-        String address = peripheral.getAddress();
-        if (UUString.isNotEmpty(address))
-        {
-            if (gattHashMap.containsKey(address))
-            {
-                gatt = gattHashMap.get(address);
-            }
-
-            if (gatt == null)
-            {
-                gatt = new UUBluetoothGatt(peripheral);
-                gattHashMap.put(address, gatt);
-            }
-        }
-
-        return gatt;
+        UUBluetooth.applicationContext = applicationContext;
     }
 
-    public static void connectPeripheral(
-            final @NonNull Context context,
-            final @NonNull UUPeripheral peripheral,
-            final boolean connectGattAutoFlag,
-            final long timeout,
-            final long disconnectTimeout,
-            final @NonNull UUConnectionDelegate delegate)
+    static Context requireApplicationContext()
     {
-        UUBluetoothGatt gatt = gattForPeripheral(peripheral);
-        if (gatt != null)
-        {
-            gatt.connect(context, connectGattAutoFlag, timeout, disconnectTimeout, delegate);
-        }
+        return Objects.requireNonNull(applicationContext, "applicationContext is null.  Must call UUBluetooth.init() on app startup");
     }
 
-    public static void disconnectPeripheral(final @NonNull UUPeripheral peripheral)
-    {
-        UUBluetoothGatt gatt = gattForPeripheral(peripheral);
-        if (gatt != null)
-        {
-            gatt.disconnect(null);
-        }
-    }
-
-    public static boolean isBluetoothLeSupported(@NonNull final Context context)
+    public static boolean isBluetoothLeSupported()
     {
         try
         {
-            return context.getPackageManager().hasSystemFeature(PackageManager.FEATURE_BLUETOOTH_LE);
+            return requireApplicationContext().getPackageManager().hasSystemFeature(PackageManager.FEATURE_BLUETOOTH_LE);
         }
         catch (Exception ex)
         {
