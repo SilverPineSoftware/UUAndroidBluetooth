@@ -1,6 +1,7 @@
 package com.silverpine.uu.sample.bluetooth.ui
 
 import android.Manifest
+import android.content.Intent
 import android.os.Bundle
 import android.view.Menu
 import android.view.MenuItem
@@ -29,7 +30,7 @@ class ScanActivity : AppCompatActivity()
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_scan)
 
-        adapter = PeripheralRowAdapter(applicationContext)
+        adapter = PeripheralRowAdapter(applicationContext, this::handlePeripheralClicked)
 
         val recyclerView = findViewById<RecyclerView>(R.id.recyclerView)
         recyclerView.adapter = adapter
@@ -68,8 +69,6 @@ class ScanActivity : AppCompatActivity()
         return super.onOptionsItemSelected(item)
     }
 
-
-
     private fun startScanning()
     {
         scanner?.startScanning<UUPeripheral>(null, arrayListOf(PeripheralFilter()))
@@ -92,6 +91,14 @@ class ScanActivity : AppCompatActivity()
     private fun stopScanning()
     {
         scanner?.stopScanning()
+    }
+
+    private fun handlePeripheralClicked(peripheral: UUPeripheral)
+    {
+        val intent = Intent(applicationContext, PeripheralDetailActivity::class.java)
+        intent.putExtra("peripheral", peripheral)
+        startActivity(intent)
+
     }
 
 
@@ -178,12 +185,26 @@ class ScanActivity : AppCompatActivity()
     {
         override fun shouldDiscoverPeripheral(peripheral: UUPeripheral): UUPeripheralFilter.Result
         {
-            //if (UUString.isEmpty(peripheral.name))
-            //{
-            //    return UUPeripheralFilter.Result.IgnoreOnce
-            //}
+            if (peripheral.name == null)
+            {
+                return UUPeripheralFilter.Result.IgnoreForever
+            }
 
-            return UUPeripheralFilter.Result.Discover
+            return UUPeripheralFilter.Result.Discover;
+
+        /*
+            if (peripheral.name == null)
+            {
+                return UUPeripheralFilter.Result.IgnoreForever
+            }
+            else if (peripheral.name!!.startsWith("OTA_"))
+            {
+                return UUPeripheralFilter.Result.Discover
+            }
+            else
+            {
+                return UUPeripheralFilter.Result.IgnoreForever
+            }*/
         }
     }
 }

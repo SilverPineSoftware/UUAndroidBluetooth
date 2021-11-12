@@ -10,14 +10,18 @@ import android.bluetooth.BluetoothProfile;
 import android.content.Context;
 import android.os.Parcel;
 import android.os.Parcelable;
+import android.util.Log;
 
 import com.silverpine.uu.core.UUData;
+import com.silverpine.uu.core.UUParcel;
 import com.silverpine.uu.core.UUString;
 import com.silverpine.uu.logging.UULog;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Locale;
+import java.util.Objects;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
@@ -28,8 +32,17 @@ import androidx.annotation.Nullable;
 @SuppressWarnings("unused")
 public class UUPeripheral implements Parcelable
 {
-    private static boolean LOGGING_ENABLED = UULog.LOGGING_ENABLED;
+    public static class Defaults
+    {
+        public static final int ConnectTimeout = 60000;
+        public static final int DisconnectTimeout = 10000;
+        public static final int ServiceDiscoveryTimeout = 60000;
+        public static final int OperationTimeout = 60000;
+    }
 
+    private static boolean LOGGING_ENABLED = true; //UULog.LOGGING_ENABLED;
+
+    private static final byte DATA_TYPE_FLAGS                                           = 0x01;
     private static final byte DATA_TYPE_INCOMPLETE_LIST_OF_16_BIT_SERVICE_CLASS_UUIDS   = 0x02;
     private static final byte DATA_TYPE_COMPLETE_LIST_OF_16_BIT_SERVICE_CLASS_UUIDS     = 0x03;
     private static final byte DATA_TYPE_INCOMPLETE_LIST_OF_128_BIT_SERVICE_CLASS_UUIDS  = 0x06;
@@ -83,6 +96,7 @@ public class UUPeripheral implements Parcelable
     private int rssi;
     private long lastRssiUpdateTime;
     private byte[] manufacturingData;
+    private byte[] flags;
     private String localName;
     private final ArrayList<String> serviceUuids = new ArrayList<>();
     private long firstAdvertisementTime;
@@ -435,6 +449,12 @@ public class UUPeripheral implements Parcelable
 
                 switch (dataType)
                 {
+                    case DATA_TYPE_FLAGS:
+                    {
+                        parseFlags(data);
+                        break;
+                    }
+
                     case DATA_TYPE_MANUFACTURING_DATA:
                     {
                         manufacturingData = data;
@@ -470,6 +490,12 @@ public class UUPeripheral implements Parcelable
                 parseManufacturingData(manufacturingData);
             }
         }
+    }
+
+    private void parseFlags(final byte[] data)
+    {
+        flags = data;
+        debugLog("parseFlags", "Flags are: " + UUString.byteToHex(flags));
     }
 
     private void parseServiceUuid(final byte[] data, final int length)
@@ -510,6 +536,43 @@ public class UUPeripheral implements Parcelable
         {
             return super.toString();
         }
+    }
+
+    @Override
+    public boolean equals(Object o)
+    {
+        if (this == o)
+        {
+            return true;
+        }
+        if (!(o instanceof UUPeripheral))
+        {
+            return false;
+        }
+        UUPeripheral that = (UUPeripheral) o;
+        return
+            rssi == that.rssi &&
+            lastRssiUpdateTime == that.lastRssiUpdateTime &&
+            firstAdvertisementTime == that.firstAdvertisementTime &&
+            lastAdvertisementTime == that.lastAdvertisementTime &&
+            totalBeaconCount == that.totalBeaconCount &&
+            Objects.equals(device, that.device) &&
+            Arrays.equals(scanRecord, that.scanRecord) &&
+            Arrays.equals(manufacturingData, that.manufacturingData) &&
+            Arrays.equals(flags, that.flags) &&
+            Objects.equals(localName, that.localName) &&
+            serviceUuids.equals(that.serviceUuids) &&
+            Objects.equals(bluetoothGatt, that.bluetoothGatt);
+    }
+
+    @Override
+    public int hashCode()
+    {
+        int result = Objects.hash(device, rssi, lastRssiUpdateTime, localName, serviceUuids, firstAdvertisementTime, lastAdvertisementTime, totalBeaconCount, bluetoothGatt);
+        result = 31 * result + Arrays.hashCode(scanRecord);
+        result = 31 * result + Arrays.hashCode(manufacturingData);
+        result = 31 * result + Arrays.hashCode(flags);
+        return result;
     }
 
     ////////////////////////////////////////////////////////////////////////////////////////////////
@@ -569,14 +632,27 @@ public class UUPeripheral implements Parcelable
     @Override
     public void writeToParcel(Parcel dest, int flags)
     {
-//        try
-//        {
-//            dest.writeString(toJsonObject().toString());
-//        }
-//        catch (Exception ex)
-//        {
-//            debugLog("writeToParcel", ex);
-//        }
+        dest.writeParcelable(device, flags);
+
+        byte[] deviceBytes = UUParcel.serializeParcel(device);
+        String deviceHex = UUString.byteToHex(deviceBytes);
+
+        if (scanRecord != null)
+        {
+            dest.writeByte((byte)1);
+            dest.writeInt(scanRecord.length);
+            dest.writeByteArray(scanRecord);
+        }
+        else
+        {
+            dest.writeByte((byte)0);
+        }
+
+        dest.writeInt(rssi);
+        dest.writeLong(lastAdvertisementTime);
+        dest.writeLong(firstAdvertisementTime);
+        dest.writeLong(lastAdvertisementTime);
+        dest.writeLong(totalBeaconCount);
     }
 
     public static final Parcelable.Creator<UUPeripheral> CREATOR
@@ -595,9 +671,23 @@ public class UUPeripheral implements Parcelable
 
     protected UUPeripheral(final Parcel in)
     {
-        //String jsonStr = in.readString();
-        //JSONObject json = UUJson.toJsonObject(jsonStr);
-        //fillFromJson(json);
+        device = in.readParcelable(BluetoothDevice.class.getClassLoader());
+
+        if (in.readByte() == 1)
+        {
+            int scanRecordLength = in.readInt();
+            scanRecord = new byte[scanRecordLength];
+            in.readByteArray(scanRecord);
+        }
+
+        rssi = in.readInt();
+        lastRssiUpdateTime = in.readLong();
+        firstAdvertisementTime = in.readLong();
+        lastAdvertisementTime = in.readLong();
+        totalBeaconCount = in.readLong();
+
+        // Fill in derived data from scan record
+        parseScanRecord();
     }
 
     private void acquireExistingGatt()
@@ -613,7 +703,7 @@ public class UUPeripheral implements Parcelable
     {
         if (LOGGING_ENABLED)
         {
-            UULog.debug(UUPeripheral.class, method, message);
+            Log.d("UUPeripheral", method + ": " + message);
         }
     }
 
@@ -621,7 +711,7 @@ public class UUPeripheral implements Parcelable
     {
         if (LOGGING_ENABLED)
         {
-            UULog.debug(UUPeripheral.class, method, exception);
+            Log.d("UUPeripheral", method + ": " + exception.toString());
         }
     }
 }

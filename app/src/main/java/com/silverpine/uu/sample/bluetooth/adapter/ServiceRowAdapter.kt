@@ -13,7 +13,7 @@ import com.silverpine.uu.sample.bluetooth.BR
 import com.silverpine.uu.sample.bluetooth.R
 import com.silverpine.uu.sample.bluetooth.viewmodel.UUPeripheralViewModel
 
-class PeripheralRowAdapter(private val context: Context, private val onClick: ((UUPeripheral)->Unit)): RecyclerView.Adapter<PeripheralRowAdapter.ViewHolder>()
+class ServiceRowAdapter(val context: Context): RecyclerView.Adapter<ServiceRowAdapter.ViewHolder>()
 {
     private val tableData: ArrayList<UUPeripheralViewModel> = ArrayList()
 
@@ -54,14 +54,23 @@ class PeripheralRowAdapter(private val context: Context, private val onClick: ((
 
             for (obj in list)
             {
-                val vm = UUPeripheralViewModel(obj, context)
-                vm.onClick = this.onClick
-                tableData.add(vm)
+                tableData.add(UUPeripheralViewModel(obj, context))
             }
         }
 
         notifyDataSetChanged()
     }
+
+    /*
+    fun updateItem(viewModel: ViewModel)
+    {
+        val index = tableData.indexOf(viewModel)
+        if (index >= 0 && index < tableData.size)
+        {
+            tableData[index] = viewModel
+            notifyItemChanged(index)
+        }
+    }*/
 
     private fun getItem(position: Int): ViewModel?
     {
@@ -76,7 +85,7 @@ class PeripheralRowAdapter(private val context: Context, private val onClick: ((
         return null
     }
 
-    inner class ViewHolder(view: View) : RecyclerView.ViewHolder(view)
+    inner class ViewHolder(val view: View) : RecyclerView.ViewHolder(view)
     {
         private val binding: ViewDataBinding? = DataBindingUtil.bind(itemView)
 
