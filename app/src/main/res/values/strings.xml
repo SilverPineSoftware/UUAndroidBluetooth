@@ -24,6 +24,13 @@
     <string name="connect">Connect</string>
     <string name="disconnect">Disconnect</string>
     <string name="discover_services">Discover Services</string>
+    <string name="uuid_label">UUID:</string>
+    <string name="name_label">Name:</string>
+    <string name="type_label">Type:</string>
+    <string name="yes">Yes</string>
+    <string name="no">No</string>
+    <string name="primary">Primary</string>
+    <string name="secondary">Secondary</string>
 
 
 </resources>

@@ -1,5 +1,6 @@
 package com.silverpine.uu.sample.bluetooth.adapter
 
+import android.bluetooth.BluetoothGattService
 import android.content.Context
 import android.view.LayoutInflater
 import android.view.View
@@ -8,19 +9,18 @@ import androidx.databinding.DataBindingUtil
 import androidx.databinding.ViewDataBinding
 import androidx.lifecycle.ViewModel
 import androidx.recyclerview.widget.RecyclerView
-import com.silverpine.uu.bluetooth.UUPeripheral
 import com.silverpine.uu.sample.bluetooth.BR
 import com.silverpine.uu.sample.bluetooth.R
-import com.silverpine.uu.sample.bluetooth.viewmodel.UUPeripheralViewModel
+import com.silverpine.uu.sample.bluetooth.viewmodel.ServiceViewModel
 
-class ServiceRowAdapter(val context: Context): RecyclerView.Adapter<ServiceRowAdapter.ViewHolder>()
+class ServiceRowAdapter(private val context: Context): RecyclerView.Adapter<ServiceRowAdapter.ViewHolder>()
 {
-    private val tableData: ArrayList<UUPeripheralViewModel> = ArrayList()
+    private val tableData: ArrayList<ServiceViewModel> = ArrayList()
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): ViewHolder
     {
         val layoutInflater = LayoutInflater.from(parent.context)
-        val view = layoutInflater.inflate(R.layout.peripheral_row, parent, false)
+        val view = layoutInflater.inflate(R.layout.service_row, parent, false)
         return ViewHolder(view)
     }
 
@@ -46,7 +46,7 @@ class ServiceRowAdapter(val context: Context): RecyclerView.Adapter<ServiceRowAd
         }
     }
 
-    fun update(list: List<UUPeripheral>)
+    fun update(list: List<BluetoothGattService>)
     {
         synchronized(tableData)
         {
@@ -54,23 +54,12 @@ class ServiceRowAdapter(val context: Context): RecyclerView.Adapter<ServiceRowAd
 
             for (obj in list)
             {
-                tableData.add(UUPeripheralViewModel(obj, context))
+                tableData.add(ServiceViewModel(obj, context))
             }
         }
 
         notifyDataSetChanged()
     }
-
-    /*
-    fun updateItem(viewModel: ViewModel)
-    {
-        val index = tableData.indexOf(viewModel)
-        if (index >= 0 && index < tableData.size)
-        {
-            tableData[index] = viewModel
-            notifyItemChanged(index)
-        }
-    }*/
 
     private fun getItem(position: Int): ViewModel?
     {
@@ -85,7 +74,7 @@ class ServiceRowAdapter(val context: Context): RecyclerView.Adapter<ServiceRowAd
         return null
     }
 
-    inner class ViewHolder(val view: View) : RecyclerView.ViewHolder(view)
+    inner class ViewHolder(view: View) : RecyclerView.ViewHolder(view)
     {
         private val binding: ViewDataBinding? = DataBindingUtil.bind(itemView)
 

@@ -63,7 +63,8 @@ class HomeActivity: RecyclerActivity()
             val timeSinceLastUpdate = System.currentTimeMillis() - this.lastUpdate
             if (timeSinceLastUpdate > 300)
             {
-                UUThread.runOnMainThread {
+                UUThread.runOnMainThread()
+                {
                     adapter.update(list)
                 }
 

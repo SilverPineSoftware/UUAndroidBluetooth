@@ -4,6 +4,7 @@ import android.os.Bundle
 import android.util.Log
 import androidx.recyclerview.widget.RecyclerView
 import com.silverpine.uu.bluetooth.UUPeripheral
+import com.silverpine.uu.core.UUThread
 import com.silverpine.uu.sample.bluetooth.R
 import com.silverpine.uu.sample.bluetooth.adapter.ServiceRowAdapter
 import com.silverpine.uu.ux.UUMenuHandler
@@ -71,6 +72,14 @@ class PeripheralDetailActivity: RecyclerActivity()
         peripheral.discoverServices(60000)
         { services, error ->
             uuShowToast("Found ${services?.size ?: 0} services")
+
+            services?.let()
+            {
+                UUThread.runOnMainThread()
+                {
+                    adapter?.update(it)
+                }
+            }
         }
 
     }
