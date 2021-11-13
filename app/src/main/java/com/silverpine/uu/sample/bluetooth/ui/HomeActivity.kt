@@ -16,7 +16,7 @@ import com.silverpine.uu.ux.uuOpenSystemSettings
 import com.silverpine.uu.ux.uuPrompt
 import com.silverpine.uu.ux.uuSetAsActionAlways
 
-class ScanActivity: RecyclerActivity()
+class HomeActivity: RecyclerActivity()
 {
     private lateinit var adapter: PeripheralRowAdapter
     private lateinit var scanner: UUBluetoothScanner

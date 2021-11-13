@@ -20,7 +20,7 @@ class ServiceRowAdapter(val context: Context): RecyclerView.Adapter<ServiceRowAd
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): ViewHolder
     {
         val layoutInflater = LayoutInflater.from(parent.context)
-        val view = layoutInflater.inflate(R.layout.uu_peripheral_row, parent, false)
+        val view = layoutInflater.inflate(R.layout.peripheral_row, parent, false)
         return ViewHolder(view)
     }
 

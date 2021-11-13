@@ -6,6 +6,7 @@ import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import com.silverpine.uu.bluetooth.UUPeripheral
+import com.silverpine.uu.core.UUString
 
 class UUPeripheralViewModel(private val model: UUPeripheral, context: Context): ViewModel()
 {
@@ -14,12 +15,14 @@ class UUPeripheralViewModel(private val model: UUPeripheral, context: Context): 
     private val _connectionState = MutableLiveData<String?>(null)
     private val _rssi = MutableLiveData<String?>(null)
     private val _timeSinceLastUpdate = MutableLiveData<String?>(null)
+    private val _manufacturingData = MutableLiveData<String?>(null)
 
     val friendlyName: LiveData<String?> = _friendlyName
     val macAddress: LiveData<String?> = _macAddress
     val connectionState: LiveData<String?> = _connectionState
     val rssi: LiveData<String?> = _rssi
     val timeSinceLastUpdate: LiveData<String?> = _timeSinceLastUpdate
+    val manufacturingData: LiveData<String?> = _manufacturingData
 
     var onClick: ((UUPeripheral)->Unit) = { }
 
@@ -30,6 +33,14 @@ class UUPeripheralViewModel(private val model: UUPeripheral, context: Context): 
         _connectionState.value = "${model.getConnectionState(context)}"
         _rssi.value = "${model.rssi}"
         _timeSinceLastUpdate.value = "${model.timeSinceLastUpdate}"
+
+        model.manufacturingData?.let()
+        {
+            _manufacturingData.value = UUString.byteToHex(it)
+        } ?: run()
+        {
+            _manufacturingData.value = ""
+        }
     }
 
     fun handleClick(view: View)

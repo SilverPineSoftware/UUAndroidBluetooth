@@ -20,7 +20,7 @@ class PeripheralRowAdapter(private val context: Context, private val onClick: ((
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): ViewHolder
     {
         val layoutInflater = LayoutInflater.from(parent.context)
-        val view = layoutInflater.inflate(R.layout.uu_peripheral_row, parent, false)
+        val view = layoutInflater.inflate(R.layout.peripheral_row, parent, false)
         return ViewHolder(view)
     }
 
