@@ -10,6 +10,7 @@
         <entry key="app/src/main/res/layout/peripheral_row.xml" value="0.375" />
         <entry key="app/src/main/res/layout/service_row.xml" value="0.25" />
         <entry key="app/src/main/res/layout/uu_peripheral_row.xml" value="0.23208864668896162" />
+        <entry key="app/src/main/res/layout/uu_view_model_binding_item.xml" value="0.26268115942028986" />
         <entry key="app/src/main/res/menu/scan_menu.xml" value="0.3375" />
       </map>
     </option>

@@ -8,7 +8,7 @@ import androidx.lifecycle.ViewModel
 import com.silverpine.uu.bluetooth.UUPeripheral
 import com.silverpine.uu.core.UUString
 
-class UUPeripheralViewModel(private val model: UUPeripheral, context: Context): ViewModel()
+class UUPeripheralViewModel(val model: UUPeripheral, context: Context): ViewModel()
 {
     private val _friendlyName = MutableLiveData<String?>(null)
     private val _macAddress = MutableLiveData<String?>(null)

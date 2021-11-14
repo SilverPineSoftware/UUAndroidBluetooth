@@ -3,22 +3,24 @@ package com.silverpine.uu.sample.bluetooth.ui
 import android.Manifest
 import android.content.Intent
 import android.os.Bundle
+import androidx.lifecycle.ViewModel
 import androidx.recyclerview.widget.RecyclerView
 import com.silverpine.uu.bluetooth.UUBluetoothScanner
 import com.silverpine.uu.bluetooth.UUPeripheral
 import com.silverpine.uu.bluetooth.UUPeripheralFilter
 import com.silverpine.uu.core.UUPermissions
 import com.silverpine.uu.core.UUThread
+import com.silverpine.uu.sample.bluetooth.BR
 import com.silverpine.uu.sample.bluetooth.R
-import com.silverpine.uu.sample.bluetooth.adapter.PeripheralRowAdapter
+import com.silverpine.uu.sample.bluetooth.viewmodel.UUPeripheralViewModel
 import com.silverpine.uu.ux.UUMenuHandler
+import com.silverpine.uu.ux.UUViewModelRecyclerAdapter
 import com.silverpine.uu.ux.uuOpenSystemSettings
 import com.silverpine.uu.ux.uuPrompt
-import com.silverpine.uu.ux.uuSetAsActionAlways
 
 class HomeActivity: RecyclerActivity()
 {
-    private lateinit var adapter: PeripheralRowAdapter
+    private lateinit var adapter: UUViewModelRecyclerAdapter
     private lateinit var scanner: UUBluetoothScanner
 
     private var lastUpdate: Long = 0
@@ -32,8 +34,20 @@ class HomeActivity: RecyclerActivity()
 
     override fun setupAdapter(recyclerView: RecyclerView)
     {
-        adapter = PeripheralRowAdapter(applicationContext, this::handlePeripheralClicked)
+        //adapter = PeripheralRowAdapter(applicationContext, this::handlePeripheralClicked)
+        adapter = UUViewModelRecyclerAdapter(this::handleRowTapped)
+        adapter.registerClass(UUPeripheralViewModel::class.java, R.layout.peripheral_row, BR.vm)
         recyclerView.adapter = adapter
+    }
+
+    private fun handleRowTapped(viewModel: ViewModel)
+    {
+        if (viewModel is UUPeripheralViewModel)
+        {
+            val intent = Intent(applicationContext, PeripheralDetailActivity::class.java)
+            intent.putExtra("peripheral", viewModel.model)
+            startActivity(intent)
+        }
     }
 
     override fun onResume()
@@ -65,10 +79,12 @@ class HomeActivity: RecyclerActivity()
             {
                 UUThread.runOnMainThread()
                 {
-                    adapter.update(list)
-                }
+                    val tmp = ArrayList<ViewModel>()
+                    tmp.addAll(list.map { UUPeripheralViewModel(it, applicationContext) })
+                    adapter.update(tmp)
 
-                lastUpdate = System.currentTimeMillis()
+                    lastUpdate = System.currentTimeMillis()
+                }
             }
         }
 
@@ -81,6 +97,7 @@ class HomeActivity: RecyclerActivity()
         invalidateOptionsMenu()
     }
 
+    /*
     private fun handlePeripheralClicked(peripheral: UUPeripheral)
     {
         val intent = Intent(applicationContext, PeripheralDetailActivity::class.java)
@@ -88,7 +105,7 @@ class HomeActivity: RecyclerActivity()
         startActivity(intent)
 
     }
-
+*/
 
 
 

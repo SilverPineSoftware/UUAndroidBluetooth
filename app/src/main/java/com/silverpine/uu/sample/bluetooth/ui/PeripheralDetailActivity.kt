@@ -2,18 +2,21 @@ package com.silverpine.uu.sample.bluetooth.ui
 
 import android.os.Bundle
 import android.util.Log
+import androidx.lifecycle.ViewModel
 import androidx.recyclerview.widget.RecyclerView
 import com.silverpine.uu.bluetooth.UUPeripheral
 import com.silverpine.uu.core.UUThread
+import com.silverpine.uu.sample.bluetooth.BR
 import com.silverpine.uu.sample.bluetooth.R
-import com.silverpine.uu.sample.bluetooth.adapter.ServiceRowAdapter
+import com.silverpine.uu.sample.bluetooth.viewmodel.ServiceViewModel
+import com.silverpine.uu.sample.bluetooth.viewmodel.UUPeripheralViewModel
 import com.silverpine.uu.ux.UUMenuHandler
 import com.silverpine.uu.ux.uuRequireParcelable
 import com.silverpine.uu.ux.uuShowToast
 
 class PeripheralDetailActivity: RecyclerActivity()
 {
-    private var adapter: ServiceRowAdapter? = null
+    private lateinit var adapter: UUViewModelRecyclerAdapter
 
     private lateinit var peripheral: UUPeripheral
 
@@ -28,7 +31,9 @@ class PeripheralDetailActivity: RecyclerActivity()
 
     override fun setupAdapter(recyclerView: RecyclerView)
     {
-        adapter = ServiceRowAdapter(applicationContext)
+        adapter = UUViewModelRecyclerAdapter(this::handleRowTapped)
+        adapter.registerClass(UUPeripheralViewModel::class.java, R.layout.peripheral_row, BR.vm)
+        adapter.registerClass(ServiceViewModel::class.java, R.layout.service_row, BR.vm)
         recyclerView.adapter = adapter
     }
 
@@ -49,6 +54,11 @@ class PeripheralDetailActivity: RecyclerActivity()
         {
             menuHandler.add(R.string.connect, this::handleConnect)
         }
+    }
+
+    private fun handleRowTapped(viewModel: ViewModel)
+    {
+
     }
 
     private fun handleConnect()
@@ -74,10 +84,14 @@ class PeripheralDetailActivity: RecyclerActivity()
             uuShowToast("Found ${services?.size ?: 0} services")
 
             services?.let()
-            {
+            { services ->
+
                 UUThread.runOnMainThread()
                 {
-                    adapter?.update(it)
+                    val tmp = ArrayList<ViewModel>()
+                    tmp.add(UUPeripheralViewModel(peripheral, applicationContext))
+                    tmp.addAll(services.map { ServiceViewModel(it, applicationContext) })
+                    adapter.update(tmp)
                 }
             }
         }
