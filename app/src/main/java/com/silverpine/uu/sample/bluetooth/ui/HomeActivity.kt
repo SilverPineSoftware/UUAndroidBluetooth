@@ -34,7 +34,6 @@ class HomeActivity: RecyclerActivity()
 
     override fun setupAdapter(recyclerView: RecyclerView)
     {
-        //adapter = PeripheralRowAdapter(applicationContext, this::handlePeripheralClicked)
         adapter = UUViewModelRecyclerAdapter(this::handleRowTapped)
         adapter.registerClass(UUPeripheralViewModel::class.java, R.layout.peripheral_row, BR.vm)
         recyclerView.adapter = adapter
@@ -97,20 +96,6 @@ class HomeActivity: RecyclerActivity()
         invalidateOptionsMenu()
     }
 
-    /*
-    private fun handlePeripheralClicked(peripheral: UUPeripheral)
-    {
-        val intent = Intent(applicationContext, PeripheralDetailActivity::class.java)
-        intent.putExtra("peripheral", peripheral)
-        startActivity(intent)
-
-    }
-*/
-
-
-
-
-
     companion object
     {
         const val LOCATION_PERMISSION = Manifest.permission.ACCESS_FINE_LOCATION
@@ -135,11 +120,7 @@ class HomeActivity: RecyclerActivity()
 
     private fun refreshPermissions(hasPermissions: Boolean)
     {
-        if (hasPermissions)
-        {
-            //homeViewModel?.scanForNearbyDevices(bleService)
-        }
-        else
+        if (!hasPermissions)
         {
             val canRequest = canRequestLocationPermission
             var msgId = R.string.location_permission_denied_message
@@ -184,8 +165,6 @@ class HomeActivity: RecyclerActivity()
         UUPermissions.handleRequestPermissionsResult(this, requestCode, permissions, grantResults)
     }
 
-
-
     inner class PeripheralFilter: UUPeripheralFilter
     {
         override fun shouldDiscoverPeripheral(peripheral: UUPeripheral): UUPeripheralFilter.Result
@@ -196,20 +175,6 @@ class HomeActivity: RecyclerActivity()
             }
 
             return UUPeripheralFilter.Result.Discover;
-
-        /*
-            if (peripheral.name == null)
-            {
-                return UUPeripheralFilter.Result.IgnoreForever
-            }
-            else if (peripheral.name!!.startsWith("OTA_"))
-            {
-                return UUPeripheralFilter.Result.Discover
-            }
-            else
-            {
-                return UUPeripheralFilter.Result.IgnoreForever
-            }*/
         }
     }
 }

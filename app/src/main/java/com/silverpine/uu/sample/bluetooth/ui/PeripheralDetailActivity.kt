@@ -11,6 +11,7 @@ import com.silverpine.uu.sample.bluetooth.R
 import com.silverpine.uu.sample.bluetooth.viewmodel.ServiceViewModel
 import com.silverpine.uu.sample.bluetooth.viewmodel.UUPeripheralViewModel
 import com.silverpine.uu.ux.UUMenuHandler
+import com.silverpine.uu.ux.UUViewModelRecyclerAdapter
 import com.silverpine.uu.ux.uuRequireParcelable
 import com.silverpine.uu.ux.uuShowToast
 
