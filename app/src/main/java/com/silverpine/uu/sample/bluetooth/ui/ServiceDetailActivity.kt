@@ -1,6 +1,6 @@
 package com.silverpine.uu.sample.bluetooth.ui
 
-import android.content.Intent
+import android.bluetooth.BluetoothGattService
 import android.os.Bundle
 import android.util.Log
 import androidx.lifecycle.ViewModel
@@ -9,6 +9,7 @@ import com.silverpine.uu.bluetooth.UUPeripheral
 import com.silverpine.uu.core.UUThread
 import com.silverpine.uu.sample.bluetooth.BR
 import com.silverpine.uu.sample.bluetooth.R
+import com.silverpine.uu.sample.bluetooth.viewmodel.CharacteristicViewModel
 import com.silverpine.uu.sample.bluetooth.viewmodel.SectionHeaderViewModel
 import com.silverpine.uu.sample.bluetooth.viewmodel.ServiceViewModel
 import com.silverpine.uu.sample.bluetooth.viewmodel.UUPeripheralViewModel
@@ -16,36 +17,26 @@ import com.silverpine.uu.ux.UUMenuHandler
 import com.silverpine.uu.ux.uuRequireParcelable
 import com.silverpine.uu.ux.uuShowToast
 
-class PeripheralDetailActivity: RecyclerActivity()
+class ServiceDetailActivity: RecyclerActivity()
 {
     private lateinit var peripheral: UUPeripheral
+    private lateinit var service: BluetoothGattService
 
     override fun onCreate(savedInstanceState: Bundle?)
     {
         super.onCreate(savedInstanceState)
 
         peripheral = intent.uuRequireParcelable("peripheral")
+        service = intent.uuRequireParcelable("service")
 
         title = peripheral.name
     }
 
     override fun setupAdapter(recyclerView: RecyclerView)
     {
-        adapter.registerClass(UUPeripheralViewModel::class.java, R.layout.peripheral_header, BR.vm)
         adapter.registerClass(ServiceViewModel::class.java, R.layout.service_row, BR.vm)
         adapter.registerClass(SectionHeaderViewModel::class.java, R.layout.section_header, BR.vm)
-    }
-
-    override fun handleRowTapped(viewModel: ViewModel)
-    {
-        if (viewModel is ServiceViewModel)
-        {
-            val intent = Intent(applicationContext, ServiceDetailActivity::class.java)
-            intent.putExtra("peripheral", peripheral)
-            intent.putExtra("service", viewModel.model)
-            startActivity(intent)
-        }
-
+        adapter.registerClass(CharacteristicViewModel::class.java, R.layout.characteristic_row, BR.vm)
     }
 
     override fun onResume()
@@ -59,12 +50,16 @@ class PeripheralDetailActivity: RecyclerActivity()
         if (peripheral.getConnectionState(applicationContext) == UUPeripheral.ConnectionState.Connected)
         {
             menuHandler.add(R.string.disconnect, this::handleDisconnect)
-            menuHandler.add(R.string.discover_services, this::handleDiscoverServices)
         }
         else
         {
             menuHandler.add(R.string.connect, this::handleConnect)
         }
+    }
+
+    override fun handleRowTapped(viewModel: ViewModel)
+    {
+
     }
 
     private fun handleConnect()
@@ -84,6 +79,7 @@ class PeripheralDetailActivity: RecyclerActivity()
         })
     }
 
+    /*
     private fun handleDiscoverServices()
     {
         peripheral.discoverServices(60000)
@@ -92,7 +88,7 @@ class PeripheralDetailActivity: RecyclerActivity()
 
             refreshUi()
         }
-    }
+    }*/
 
     private fun handleDisconnect()
     {
@@ -105,13 +101,12 @@ class PeripheralDetailActivity: RecyclerActivity()
         {
             val tmp = ArrayList<ViewModel>()
             tmp.add(SectionHeaderViewModel(R.string.info))
-            tmp.add(UUPeripheralViewModel(peripheral, applicationContext))
-            tmp.add(SectionHeaderViewModel(R.string.services))
-            tmp.addAll(peripheral.discoveredServices().map { ServiceViewModel(it) })
+            tmp.add(ServiceViewModel(service))
+            tmp.add(SectionHeaderViewModel(R.string.characteristics))
+            tmp.addAll(service.characteristics.map { CharacteristicViewModel(it) })
             adapter.update(tmp)
         }
     }
-
 }
 
 

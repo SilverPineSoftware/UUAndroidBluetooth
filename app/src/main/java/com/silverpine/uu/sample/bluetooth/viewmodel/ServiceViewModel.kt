@@ -1,7 +1,6 @@
 package com.silverpine.uu.sample.bluetooth.viewmodel
 
 import android.bluetooth.BluetoothGattService
-import android.content.Context
 import android.view.View
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
@@ -9,7 +8,7 @@ import androidx.lifecycle.ViewModel
 import com.silverpine.uu.bluetooth.UUBluetooth
 import com.silverpine.uu.sample.bluetooth.ui.uuTypeAsString
 
-class ServiceViewModel(private val model: BluetoothGattService, context: Context): ViewModel()
+class ServiceViewModel(val model: BluetoothGattService): ViewModel()
 {
     private val _uuid = MutableLiveData<String?>(null)
     private val _name = MutableLiveData<String?>(null)

@@ -14,13 +14,11 @@ import com.silverpine.uu.sample.bluetooth.BR
 import com.silverpine.uu.sample.bluetooth.R
 import com.silverpine.uu.sample.bluetooth.viewmodel.UUPeripheralViewModel
 import com.silverpine.uu.ux.UUMenuHandler
-import com.silverpine.uu.ux.UUViewModelRecyclerAdapter
 import com.silverpine.uu.ux.uuOpenSystemSettings
 import com.silverpine.uu.ux.uuPrompt
 
 class HomeActivity: RecyclerActivity()
 {
-    private lateinit var adapter: UUViewModelRecyclerAdapter
     private lateinit var scanner: UUBluetoothScanner
 
     private var lastUpdate: Long = 0
@@ -34,15 +32,13 @@ class HomeActivity: RecyclerActivity()
 
     override fun setupAdapter(recyclerView: RecyclerView)
     {
-        adapter = UUViewModelRecyclerAdapter(this::handleRowTapped)
         adapter.registerClass(UUPeripheralViewModel::class.java, R.layout.peripheral_row, BR.vm)
-        recyclerView.adapter = adapter
     }
 
-    private fun handleRowTapped(viewModel: ViewModel)
+    override fun handleRowTapped(viewModel: ViewModel)
     {
         stopScanning()
-        
+
         if (viewModel is UUPeripheralViewModel)
         {
             val intent = Intent(applicationContext, PeripheralDetailActivity::class.java)

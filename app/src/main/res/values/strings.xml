@@ -37,6 +37,14 @@
     <string name="address_label">Address:</string>
     <string name="state_label">State:</string>
     <string name="rssi_label">RSSI:</string>
+    <string name="properties_label">Properties:</string>
+    <string name="is_notifying_label">Is Notifying:</string>
+    <string name="data_label">Data:</string>
+    <string name="read_data">Read Data</string>
+    <string name="write_data">Write Data</string>
+    <string name="write_data_wwor">WWOR</string>
+    <string name="turn_notify_on">Turn Notify On</string>
+    <string name="turn_notify_off">Turn Notify Off</string>
 
 
 </resources>
