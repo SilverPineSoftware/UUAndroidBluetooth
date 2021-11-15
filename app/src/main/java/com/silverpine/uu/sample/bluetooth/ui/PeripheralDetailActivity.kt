@@ -8,6 +8,7 @@ import com.silverpine.uu.bluetooth.UUPeripheral
 import com.silverpine.uu.core.UUThread
 import com.silverpine.uu.sample.bluetooth.BR
 import com.silverpine.uu.sample.bluetooth.R
+import com.silverpine.uu.sample.bluetooth.viewmodel.SectionHeaderViewModel
 import com.silverpine.uu.sample.bluetooth.viewmodel.ServiceViewModel
 import com.silverpine.uu.sample.bluetooth.viewmodel.UUPeripheralViewModel
 import com.silverpine.uu.ux.UUMenuHandler
@@ -27,21 +28,22 @@ class PeripheralDetailActivity: RecyclerActivity()
 
         peripheral = intent.uuRequireParcelable("peripheral")
 
-        title = peripheral?.name
+        title = peripheral.name
     }
 
     override fun setupAdapter(recyclerView: RecyclerView)
     {
         adapter = UUViewModelRecyclerAdapter(this::handleRowTapped)
-        adapter.registerClass(UUPeripheralViewModel::class.java, R.layout.peripheral_row, BR.vm)
+        adapter.registerClass(UUPeripheralViewModel::class.java, R.layout.peripheral_header, BR.vm)
         adapter.registerClass(ServiceViewModel::class.java, R.layout.service_row, BR.vm)
+        adapter.registerClass(SectionHeaderViewModel::class.java, R.layout.section_header, BR.vm)
         recyclerView.adapter = adapter
     }
 
     override fun onResume()
     {
         super.onResume()
-
+        refreshUi()
     }
 
     override fun populateMenu(menuHandler: UUMenuHandler)
@@ -68,13 +70,14 @@ class PeripheralDetailActivity: RecyclerActivity()
 
             Log.d("LOG", "Peripheral connected")
             uuShowToast("Connected")
+            refreshUi()
 
         },
         { disconnectError ->
 
-            uuShowToast("Disconnected")
-
             Log.d("LOG", "Peripheral disconnected")
+            uuShowToast("Disconnected")
+            refreshUi()
         })
     }
 
@@ -84,25 +87,26 @@ class PeripheralDetailActivity: RecyclerActivity()
         { services, error ->
             uuShowToast("Found ${services?.size ?: 0} services")
 
-            services?.let()
-            { services ->
-
-                UUThread.runOnMainThread()
-                {
-                    val tmp = ArrayList<ViewModel>()
-                    tmp.add(UUPeripheralViewModel(peripheral, applicationContext))
-                    tmp.addAll(services.map { ServiceViewModel(it, applicationContext) })
-                    adapter.update(tmp)
-                }
-            }
+            refreshUi()
         }
-
     }
 
     private fun handleDisconnect()
     {
         peripheral.disconnect(null)
+    }
 
+    private fun refreshUi()
+    {
+        UUThread.runOnMainThread()
+        {
+            val tmp = ArrayList<ViewModel>()
+            tmp.add(SectionHeaderViewModel(R.string.info))
+            tmp.add(UUPeripheralViewModel(peripheral, applicationContext))
+            tmp.add(SectionHeaderViewModel(R.string.services))
+            tmp.addAll(peripheral.discoveredServices().map { ServiceViewModel(it, applicationContext) })
+            adapter.update(tmp)
+        }
     }
 }
 

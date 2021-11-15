@@ -11,7 +11,7 @@
     <string name="hello_second_fragment">Hello second fragment. Arg: %1$s</string>
     <string name="title_activity_home">HomeActivity</string>
 
-    <string name="start">Start</string>
+    <string name="scan">Scan</string>
     <string name="stop">Stop</string>
 
 
@@ -31,6 +31,12 @@
     <string name="no">No</string>
     <string name="primary">Primary</string>
     <string name="secondary">Secondary</string>
+    <string name="info">Info</string>
+    <string name="services">Services</string>
+    <string name="characteristics">Characteristics</string>
+    <string name="address_label">Address:</string>
+    <string name="state_label">State:</string>
+    <string name="rssi_label">RSSI:</string>
 
 
 </resources>

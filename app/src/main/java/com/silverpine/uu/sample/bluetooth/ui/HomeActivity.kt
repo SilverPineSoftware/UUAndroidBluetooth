@@ -41,6 +41,8 @@ class HomeActivity: RecyclerActivity()
 
     private fun handleRowTapped(viewModel: ViewModel)
     {
+        stopScanning()
+        
         if (viewModel is UUPeripheralViewModel)
         {
             val intent = Intent(applicationContext, PeripheralDetailActivity::class.java)
@@ -64,7 +66,7 @@ class HomeActivity: RecyclerActivity()
         }
         else
         {
-            menuHandler.addAction(R.string.start, this::startScanning)
+            menuHandler.addAction(R.string.scan, this::startScanning)
         }
     }
 
