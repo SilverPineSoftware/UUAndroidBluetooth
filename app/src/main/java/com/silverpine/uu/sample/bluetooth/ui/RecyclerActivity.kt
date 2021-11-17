@@ -18,7 +18,7 @@ abstract class RecyclerActivity: UUAppCompatActivity(layoutResourceId = R.layout
 
         val recyclerView = findViewById<RecyclerView>(R.id.recyclerView)
         recyclerView.layoutManager = LinearLayoutManager(this)
-        adapter = UUViewModelRecyclerAdapter(this::handleRowTapped)
+        adapter = UUViewModelRecyclerAdapter(this, this::handleRowTapped)
         recyclerView.adapter = adapter
         setupAdapter(recyclerView)
     }

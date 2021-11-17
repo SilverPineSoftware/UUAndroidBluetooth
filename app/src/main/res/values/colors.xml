@@ -9,4 +9,10 @@
     <color name="white">#FFFFFFFF</color>
 
     <color name="section_header_background">#CCC</color>
+
+    <color name="input_box_enabled">#000</color>
+    <color name="input_box_disabled">#AAA</color>
+    <color name="choice_button_background_selected">#AAA</color>
+    <color name="choice_button_background_unselected">@color/white</color>
+
 </resources>

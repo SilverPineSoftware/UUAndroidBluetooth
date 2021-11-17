@@ -103,7 +103,7 @@ class ServiceDetailActivity: RecyclerActivity()
             tmp.add(SectionHeaderViewModel(R.string.info))
             tmp.add(ServiceViewModel(service))
             tmp.add(SectionHeaderViewModel(R.string.characteristics))
-            tmp.addAll(service.characteristics.map { CharacteristicViewModel(it) })
+            tmp.addAll(service.characteristics.map { CharacteristicViewModel(peripheral, it) })
             adapter.update(tmp)
         }
     }

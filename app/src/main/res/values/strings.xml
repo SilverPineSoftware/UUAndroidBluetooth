@@ -43,8 +43,9 @@
     <string name="read_data">Read Data</string>
     <string name="write_data">Write Data</string>
     <string name="write_data_wwor">WWOR</string>
-    <string name="turn_notify_on">Turn Notify On</string>
-    <string name="turn_notify_off">Turn Notify Off</string>
+    <string name="toggle_notify">Toggle Notify</string>
+    <string name="hex">hex</string>
+    <string name="utf8">utf8</string>
 
 
 </resources>
