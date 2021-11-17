@@ -6,6 +6,7 @@ import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.recyclerview.widget.RecyclerView
 import com.silverpine.uu.bluetooth.UUPeripheral
+import com.silverpine.uu.core.UUString
 import com.silverpine.uu.core.UUThread
 import com.silverpine.uu.sample.bluetooth.BR
 import com.silverpine.uu.sample.bluetooth.R
@@ -15,7 +16,11 @@ import com.silverpine.uu.sample.bluetooth.viewmodel.ServiceViewModel
 import com.silverpine.uu.sample.bluetooth.viewmodel.UUPeripheralViewModel
 import com.silverpine.uu.ux.UUMenuHandler
 import com.silverpine.uu.ux.uuRequireParcelable
+import com.silverpine.uu.ux.uuRequireString
 import com.silverpine.uu.ux.uuShowToast
+import java.lang.RuntimeException
+import java.util.*
+import kotlin.collections.ArrayList
 
 class ServiceDetailActivity: RecyclerActivity()
 {
@@ -27,8 +32,7 @@ class ServiceDetailActivity: RecyclerActivity()
         super.onCreate(savedInstanceState)
 
         peripheral = intent.uuRequireParcelable("peripheral")
-        service = intent.uuRequireParcelable("service")
-
+        service = intent.uuRequireService(peripheral,"serviceUuid")
         title = peripheral.name
     }
 

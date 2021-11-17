@@ -25,6 +25,10 @@ class CharacteristicViewModel(private val peripheral: UUPeripheral, val model: B
     private val _isNotifying = MutableLiveData<String?>(null)
     private val _dataEditable = MutableLiveData(false)
     private val _hexSelected = MutableLiveData(true)
+    private val _canToggleNotify = MutableLiveData(false)
+    private val _canReadData = MutableLiveData(false)
+    private val _canWriteData = MutableLiveData(false)
+    private val _canWWORWriteData = MutableLiveData(false)
 
     val uuid: LiveData<String?> = _uuid
     val name: LiveData<String?> = _name
@@ -32,6 +36,10 @@ class CharacteristicViewModel(private val peripheral: UUPeripheral, val model: B
     val isNotifying: LiveData<String?> = _isNotifying
     val dataEditable: LiveData<Boolean> = _dataEditable
     val hexSelected: LiveData<Boolean> = _hexSelected
+    val canToggleNotify: LiveData<Boolean> = _canToggleNotify
+    val canReadData: LiveData<Boolean> = _canReadData
+    val canWriteData: LiveData<Boolean> = _canWriteData
+    val canWWORWriteData: LiveData<Boolean> = _canWWORWriteData
 
     var data = MutableLiveData<String?>(null)
 
@@ -41,6 +49,10 @@ class CharacteristicViewModel(private val peripheral: UUPeripheral, val model: B
         _name.value = UUBluetooth.bluetoothSpecName(model.uuid)
         _properties.value = UUBluetooth.characteristicPropertiesToString(model.properties)
         _dataEditable.value = (UUBluetooth.canWriteData(model) || UUBluetooth.canWriteWithoutResponse(model))
+        _canToggleNotify.value = UUBluetooth.canToggleNotify(model)
+        _canReadData.value = UUBluetooth.canReadData(model)
+        _canWriteData.value = UUBluetooth.canWriteData(model)
+        _canWWORWriteData.value = UUBluetooth.canWriteWithoutResponse(model)
 
         refreshNotifyLabel()
         refreshData()

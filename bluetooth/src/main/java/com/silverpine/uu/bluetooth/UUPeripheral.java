@@ -334,6 +334,21 @@ public class UUPeripheral implements Parcelable
         return list;
     }
 
+    @Nullable
+    public BluetoothGattService getDiscoveredService(@NonNull final String uuid)
+    {
+        ArrayList<BluetoothGattService> list = discoveredServices();
+        for (BluetoothGattService svc: list)
+        {
+            if (svc.getUuid().toString().equalsIgnoreCase(uuid))
+            {
+                return svc;
+            }
+        }
+
+        return null;
+    }
+
     public void setNotifyState(
             final @NonNull BluetoothGattCharacteristic characteristic,
             final boolean notifyState,
