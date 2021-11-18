@@ -16,7 +16,6 @@ import androidx.annotation.Nullable;
 public class UUPeripheralOperation<T extends UUPeripheral>
 {
     private final @NonNull T peripheral;
-    //private @Nullable UUBluetoothError operationError;
     private @Nullable UUObjectDelegate<UUBluetoothError> operationCallback;
     private final @NonNull ArrayList<BluetoothGattService> discoveredServices = new ArrayList<>();
     private final @NonNull ArrayList<BluetoothGattCharacteristic> discoveredCharacteristics = new ArrayList<>();
