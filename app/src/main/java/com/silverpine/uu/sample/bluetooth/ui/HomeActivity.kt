@@ -14,10 +14,11 @@ import com.silverpine.uu.sample.bluetooth.BR
 import com.silverpine.uu.sample.bluetooth.R
 import com.silverpine.uu.sample.bluetooth.viewmodel.UUPeripheralViewModel
 import com.silverpine.uu.ux.UUMenuHandler
+import com.silverpine.uu.ux.UURecyclerActivity
 import com.silverpine.uu.ux.uuOpenSystemSettings
 import com.silverpine.uu.ux.uuPrompt
 
-class HomeActivity: RecyclerActivity()
+class HomeActivity: UURecyclerActivity()
 {
     private lateinit var scanner: UUBluetoothScanner<UUPeripheral>
 
