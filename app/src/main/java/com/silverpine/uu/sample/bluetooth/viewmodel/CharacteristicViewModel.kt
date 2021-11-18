@@ -99,50 +99,66 @@ class CharacteristicViewModel(private val peripheral: UUPeripheral, val model: B
         peripheral.setNotifyState(model,
             !isNotifying,
             30000,
-            object : UUCharacteristicDelegate {
-                override fun onComplete(
-                    peripheral: UUPeripheral,
-                    characteristic: BluetoothGattCharacteristic,
-                    error: UUBluetoothError?,
-                ) {
-                    //UULog.debug(javaClass, "setNotify.characteristicChanged",
-                      //  "Characteristic changed, characteristic: " + characteristic.uuid +
-                        //        ", data: " + UUString.byteToHex(characteristic.value) +
-                          //      ", error: " + error)
+            { peripheral, characteristic, error -> //UULog.debug(javaClass, "setNotify.characteristicChanged",
+                //  "Characteristic changed, characteristic: " + characteristic.uuid +
+                //        ", data: " + UUString.byteToHex(characteristic.value) +
+                //      ", error: " + error)
 
-                    UUThread.runOnMainThread()
-                    {
-                        refreshData()
-                    }
+                UUThread.runOnMainThread()
+                {
+                    refreshData()
                 }
-            },
-            object : UUCharacteristicDelegate {
-                override fun onComplete(
-                    peripheral: UUPeripheral,
-                    characteristic: BluetoothGattCharacteristic,
-                    error: UUBluetoothError?,
-                ) {
-                    //UULog.debug(javaClass, "setNotify.onComplete",
-                      //  ("Set Notify complete, characteristic: " + characteristic.uuid +
-                        //        ", error: " + error))
-                    //UUListView.reloadRow(listView, position)
+            }
+        ) { peripheral, characteristic, error -> //UULog.debug(javaClass, "setNotify.onComplete",
+            //  ("Set Notify complete, characteristic: " + characteristic.uuid +
+            //        ", error: " + error))
+            //UUListView.reloadRow(listView, position)
 
-                    UUThread.runOnMainThread()
-                    {
-                        refreshData()
-                    }
-                }
-            })
+            UUThread.runOnMainThread()
+            {
+                refreshData()
+            }
+        }
     }
 
     fun writeData()
     {
+        data.value?.let()
+        { hex ->
 
+            val tx = UUString.hexToByte(hex)
+
+            Log.d("DEBUG", "Writing $hex")
+
+            peripheral.writeCharacteristic(model, tx, 10000)
+            { p, c, e ->
+
+                UUThread.runOnMainThread()
+                {
+                    refreshData()
+                }
+            }
+        }
     }
 
     fun wworWriteData()
     {
+        data.value?.let()
+        { hex ->
 
+            val tx = UUString.hexToByte(hex)
+
+            Log.d("DEBUG", "Writing WWOR $hex")
+
+            peripheral.writeCharacteristicWithoutResponse(model, tx, 10000)
+            { p, c, e ->
+
+                UUThread.runOnMainThread()
+                {
+                    refreshData()
+                }
+            }
+        }
     }
 
     private fun refreshNotifyLabel()
