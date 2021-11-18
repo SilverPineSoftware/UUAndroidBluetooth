@@ -11,15 +11,14 @@ import android.bluetooth.le.ScanRecord;
 import android.bluetooth.le.ScanResult;
 import android.bluetooth.le.ScanSettings;
 import android.content.Context;
-import android.os.Build;
 import android.os.ParcelUuid;
 import android.util.Log;
 
 import com.silverpine.uu.core.UUListDelegate;
 import com.silverpine.uu.core.UUThread;
 import com.silverpine.uu.core.UUWorkerThread;
-import com.silverpine.uu.logging.UULog;
 
+import java.lang.reflect.Constructor;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -29,14 +28,9 @@ import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 
 //@SuppressWarnings("unused")
-public class UUBluetoothScanner //implements BluetoothAdapter.LeScanCallback
+public class UUBluetoothScanner<T extends UUPeripheral>
 {
     private static boolean LOGGING_ENABLED = true;//UULog.LOGGING_ENABLED;
-
-//    public interface Listener
-//    {
-//        void onPeripheralFound(final @NonNull UUBluetoothScanner scanner, final @NonNull UUPeripheral peripheral);
-//    }
 
     private BluetoothAdapter bluetoothAdapter;
     private BluetoothLeScanner bluetoothLeScanner;
@@ -44,26 +38,24 @@ public class UUBluetoothScanner //implements BluetoothAdapter.LeScanCallback
     private UUWorkerThread scanThread;
     private boolean isScanning = false;
     private ArrayList<UUPeripheralFilter> scanFilters;
-    private UUPeripheralFactory<?> peripheralFactory;
-    //private boolean useLollipopScanning = true;
+    private Class<T> peripheralClass;
     private final HashMap<String, Boolean> ignoredDevices = new HashMap<>();
-    //private Listener listener;
 
-    private final HashMap<String, UUPeripheral> nearbyPeripherals = new HashMap<>();
-    private UUListDelegate<UUPeripheral> nearbyPeripheralCallback = null;
+    private final HashMap<String, T> nearbyPeripherals = new HashMap<>();
+    private UUListDelegate<T> nearbyPeripheralCallback = null;
 
-    public UUBluetoothScanner(final Context context, final @Nullable UUPeripheralFactory<?> factory)
+    public UUBluetoothScanner(@NonNull final Context context, @NonNull final Class<T> clazz)
     {
         BluetoothManager bluetoothManager = (BluetoothManager) context.getSystemService(Context.BLUETOOTH_SERVICE);
         bluetoothAdapter = bluetoothManager.getAdapter();
         scanThread = new UUWorkerThread("UUBluetoothScanner");
-        peripheralFactory = factory;
+        peripheralClass = clazz;
     }
 
-    public <T extends UUPeripheral> void startScanning(
-            final @Nullable UUID[] serviceUuidList,
-            final @Nullable ArrayList<UUPeripheralFilter> filters,
-            final @NonNull UUListDelegate<UUPeripheral> callback)
+    public void startScanning(
+        final @Nullable UUID[] serviceUuidList,
+        final @Nullable ArrayList<UUPeripheralFilter> filters,
+        final @NonNull UUListDelegate<T> callback)
     {
         UUThread.runOnMainThread(new Runnable()
         {
@@ -75,11 +67,6 @@ public class UUBluetoothScanner //implements BluetoothAdapter.LeScanCallback
                 isScanning = true;
                 clearIgnoredDevices();
                 nearbyPeripheralCallback = callback;
-
-                if (peripheralFactory == null)
-                {
-                    peripheralFactory = new DefaultPeripheralFactory();
-                }
 
                 startScan(serviceUuidList);
             }
@@ -287,7 +274,7 @@ public class UUBluetoothScanner //implements BluetoothAdapter.LeScanCallback
                 @Override
                 public void run()
                 {
-                    UUPeripheral peripheral = peripheralFactory.fromScanResult(scanResult.getDevice(), scanResult.getRssi(), safeGetScanRecord(scanResult));
+                    T peripheral = createPeripheral(scanResult);
                     if (shouldDiscoverPeripheral(peripheral))
                     {
                         handlePeripheralFound(peripheral);
@@ -301,7 +288,19 @@ public class UUBluetoothScanner //implements BluetoothAdapter.LeScanCallback
         }
     }
 
-    @TargetApi(21)
+    private T createPeripheral(@NonNull final ScanResult scanResult)
+    {
+        try
+        {
+            Constructor<T> ctor = peripheralClass.getConstructor(BluetoothDevice.class, int.class, byte[].class);
+            return ctor.newInstance(scanResult.getDevice(), scanResult.getRssi(), safeGetScanRecord(scanResult));
+        }
+        catch (Exception ex)
+        {
+            throw new RuntimeException("Failed to construct peripheral", ex);
+        }
+    }
+
     private byte[] safeGetScanRecord(final ScanResult result)
     {
         if (result != null)
@@ -316,7 +315,7 @@ public class UUBluetoothScanner //implements BluetoothAdapter.LeScanCallback
         return null;
     }
 
-    private void handlePeripheralFound(@NonNull final UUPeripheral peripheral)
+    private void handlePeripheralFound(@NonNull final T peripheral)
     {
         if (!isScanning)
         {
@@ -335,13 +334,13 @@ public class UUBluetoothScanner //implements BluetoothAdapter.LeScanCallback
         debugLog("handlePeripheralFound", "Peripheral Found: " + peripheral);
         nearbyPeripherals.put(address, peripheral);
 
-        ArrayList<UUPeripheral> sorted = sortedPeripherals();
+        ArrayList<T> sorted = sortedPeripherals();
         UUListDelegate.safeInvoke(nearbyPeripheralCallback, sorted);
     }
 
-    private ArrayList<UUPeripheral> sortedPeripherals()
+    private ArrayList<T> sortedPeripherals()
     {
-        ArrayList<UUPeripheral> list = new ArrayList<>(nearbyPeripherals.values());
+        ArrayList<T> list = new ArrayList<>(nearbyPeripherals.values());
         list.sort((lhs, rhs) ->
         {
             if (lhs.getRssi() > rhs.getRssi())
@@ -466,6 +465,7 @@ public class UUBluetoothScanner //implements BluetoothAdapter.LeScanCallback
         }
     }
 
+    /*
     private static class DefaultPeripheralFactory implements UUPeripheralFactory<UUPeripheral>
     {
         @NonNull
@@ -474,7 +474,7 @@ public class UUBluetoothScanner //implements BluetoothAdapter.LeScanCallback
         {
             return new UUPeripheral(device, rssi, scanRecord);
         }
-    }
+    }*/
 
     private static void debugLog(final String method, final String message)
     {

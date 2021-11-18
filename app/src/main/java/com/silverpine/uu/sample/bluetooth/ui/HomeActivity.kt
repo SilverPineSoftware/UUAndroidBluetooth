@@ -19,7 +19,7 @@ import com.silverpine.uu.ux.uuPrompt
 
 class HomeActivity: RecyclerActivity()
 {
-    private lateinit var scanner: UUBluetoothScanner
+    private lateinit var scanner: UUBluetoothScanner<UUPeripheral>
 
     private var lastUpdate: Long = 0
 
@@ -27,7 +27,7 @@ class HomeActivity: RecyclerActivity()
     {
         super.onCreate(savedInstanceState)
 
-        scanner = UUBluetoothScanner(applicationContext, null)
+        scanner = UUBluetoothScanner(applicationContext, UUPeripheral::class.java)
     }
 
     override fun setupAdapter(recyclerView: RecyclerView)
@@ -68,7 +68,7 @@ class HomeActivity: RecyclerActivity()
 
     private fun startScanning()
     {
-        scanner.startScanning<UUPeripheral>(null, arrayListOf(PeripheralFilter()))
+        scanner.startScanning(null, arrayListOf(PeripheralFilter()))
         { list ->
 
             val timeSinceLastUpdate = System.currentTimeMillis() - this.lastUpdate

@@ -24,6 +24,7 @@ import java.util.Objects;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
+import androidx.annotation.VisibleForTesting;
 
 /**
  * Wrapper class around a BTLE scanning result.
@@ -104,6 +105,7 @@ public class UUPeripheral implements Parcelable
 
     private BluetoothGatt bluetoothGatt;
 
+    @VisibleForTesting
     public UUPeripheral()
     {
     }
