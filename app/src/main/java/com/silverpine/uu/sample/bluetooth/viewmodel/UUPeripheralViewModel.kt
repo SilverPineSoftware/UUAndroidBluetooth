@@ -47,5 +47,4 @@ class UUPeripheralViewModel(val model: UUPeripheral, context: Context): ViewMode
     {
         onClick.invoke(model)
     }
-
 }
