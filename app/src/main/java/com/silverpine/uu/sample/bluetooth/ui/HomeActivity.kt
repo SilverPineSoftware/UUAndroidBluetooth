@@ -1,8 +1,11 @@
 package com.silverpine.uu.sample.bluetooth.ui
 
 import android.Manifest
+import android.app.AlertDialog
 import android.content.Intent
 import android.os.Bundle
+import android.util.Log
+import androidx.core.util.Pair
 import androidx.lifecycle.ViewModel
 import androidx.recyclerview.widget.RecyclerView
 import com.silverpine.uu.bluetooth.UUBluetoothScanner
@@ -12,6 +15,7 @@ import com.silverpine.uu.core.UUPermissions
 import com.silverpine.uu.core.UUThread
 import com.silverpine.uu.sample.bluetooth.BR
 import com.silverpine.uu.sample.bluetooth.R
+import com.silverpine.uu.sample.bluetooth.operations.ReadDeviceInfoOperation
 import com.silverpine.uu.sample.bluetooth.viewmodel.UUPeripheralViewModel
 import com.silverpine.uu.ux.UUMenuHandler
 import com.silverpine.uu.ux.UURecyclerActivity
@@ -20,6 +24,8 @@ import com.silverpine.uu.ux.uuPrompt
 
 class HomeActivity: UURecyclerActivity()
 {
+    private val TAG = HomeActivity::javaClass.name
+
     private lateinit var scanner: UUBluetoothScanner<UUPeripheral>
 
     private var lastUpdate: Long = 0
@@ -42,9 +48,69 @@ class HomeActivity: UURecyclerActivity()
 
         if (viewModel is UUPeripheralViewModel)
         {
-            val intent = Intent(applicationContext, PeripheralDetailActivity::class.java)
-            intent.putExtra("peripheral", viewModel.model)
-            startActivity(intent)
+            val peripheral = viewModel.model
+            val builder = AlertDialog.Builder(this)
+            builder.setTitle("Choose an action for ${peripheral.name} - ${peripheral.address}")
+
+            val actions = ArrayList<Pair<String, Runnable>>()
+            actions.add(Pair("View Services", Runnable { gotoPeripheralServices(peripheral) }))
+            actions.add(Pair("Read Info", Runnable { readDeviceInfo(peripheral) }))
+
+            val items = arrayOfNulls<String>(actions.size)
+            for (i in items.indices)
+            {
+                items[i] = actions[i].first
+            }
+            builder.setCancelable(true)
+
+            builder.setItems(items) { dialog, which ->
+                if (which >= 0 && which < actions.size) {
+                    actions[which].second.run()
+                }
+            }
+
+            builder.create().show()
+        }
+    }
+
+    private fun gotoPeripheralServices(peripheral: UUPeripheral)
+    {
+        val intent = Intent(applicationContext, PeripheralDetailActivity::class.java)
+        intent.putExtra("peripheral", peripheral)
+        startActivity(intent)
+    }
+
+    private var readDeviceInfoOperation: ReadDeviceInfoOperation? = null
+    private fun readDeviceInfo(peripheral: UUPeripheral)
+    {
+        val op = ReadDeviceInfoOperation(peripheral)
+        readDeviceInfoOperation = op
+        op.start()
+        { err ->
+
+            UUThread.runOnMainThread()
+            {
+                if (err != null)
+                {
+                    uuPrompt("Read Devie Info",
+                        "Error: ${err.toString()}",
+                        "OK",
+                        null,
+                        true,
+                        { },
+                        {})
+                }
+                else
+                {
+                    uuPrompt("Read Device Info",
+                        "Name: ${op.deviceName}\nMfg: ${op.mfgName}",
+                        "OK",
+                        null,
+                        true,
+                        { },
+                        { })
+                }
+            }
         }
     }
 
@@ -69,6 +135,8 @@ class HomeActivity: UURecyclerActivity()
 
     private fun startScanning()
     {
+        Log.d(TAG, "startScanning")
+
         scanner.startScanning(null, arrayListOf(PeripheralFilter()))
         { list ->
 
@@ -77,6 +145,7 @@ class HomeActivity: UURecyclerActivity()
             {
                 UUThread.runOnMainThread()
                 {
+                    Log.d(TAG, "Updating devices, ${list.size} nearby")
                     val tmp = ArrayList<ViewModel>()
                     tmp.addAll(list.map { UUPeripheralViewModel(it, applicationContext) })
                     adapter.update(tmp)
@@ -91,6 +160,8 @@ class HomeActivity: UURecyclerActivity()
 
     private fun stopScanning()
     {
+        Log.d(TAG, "stopScanning")
+
         scanner.stopScanning()
         invalidateOptionsMenu()
     }
