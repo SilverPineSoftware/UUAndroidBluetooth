@@ -39,6 +39,7 @@ class UUBluetoothGatt
     private static final String READ_RSSI_WATCHDOG_BUCKET = "UUBluetoothReadRssiWatchdogBucket";
     private static final String POLL_RSSI_BUCKET = "UUBluetoothPollRssiBucket";
     private static final String DISCONNECT_WATCHDOG_BUCKET = "UUBluetoothDisconnectWatchdogBucket";
+    private static final String REQUEST_MTU_WATCHDOG_BUCKET = "UUBluetoothRequestWatchdogBucket";
 
     private static final int TIMEOUT_DISABLED = -1;
 
@@ -50,6 +51,7 @@ class UUBluetoothGatt
     private UUConnectionDelegate connectionDelegate;
     private UUPeripheralErrorDelegate serviceDiscoveryDelegate;
     private UUPeripheralErrorDelegate readRssiDelegate;
+    private UUPeripheralErrorDelegate requestMtuDelegate;
     private UUPeripheralDelegate pollRssiDelegate;
 
     private UUBluetoothError disconnectError;
@@ -189,6 +191,46 @@ class UUBluetoothGatt
                 boolean result = requestHighPriority();
                 notifyBoolResult(delegate, result);
             }
+        });
+    }
+
+    void requestMtuSize(final long timeout, final int mtuSize, @NonNull final UUPeripheralErrorDelegate delegate)
+    {
+        final String timerId = requestMtuWatchdogTimerId();
+
+        requestMtuDelegate = (peripheral, error) ->
+        {
+            debugLog("requestMtuSize", "Request MTU Size complete: " + peripheral + ", error: " + error);
+            UUTimer.cancelActiveTimer(timerId);
+            delegate.onComplete(peripheral, error);
+        };
+
+        UUTimer.startTimer(timerId, timeout, peripheral, (timer, userInfo) ->
+        {
+            debugLog("requestMtuSize", "Request MTU Size timeout: " + peripheral);
+            notifyReqeustMtuComplete(UUBluetoothError.timeoutError());
+        });
+
+        UUThread.runOnMainThread(() ->
+        {
+            if (bluetoothGatt == null)
+            {
+                debugLog("requestMtuSize", "bluetoothGatt is null!");
+                notifyReqeustMtuComplete(UUBluetoothError.notConnectedError());
+                return;
+            }
+
+            debugLog("requestMtuSize", "Reading RSSI for: " + peripheral);
+            boolean ok = bluetoothGatt.requestMtu(mtuSize);
+            debugLog("requestMtuSize", "returnCode: " + ok);
+
+            if (!ok)
+            {
+                notifyReqeustMtuComplete(UUBluetoothError.operationFailedError("requestMtuSize"));
+            }
+            // else
+            //
+            // wait for delegate or timeout
         });
     }
 
@@ -897,6 +939,13 @@ class UUBluetoothGatt
         notifyPeripheralErrorDelegate(delegate, error);
     }
 
+    private void notifyReqeustMtuComplete(final @Nullable UUBluetoothError error)
+    {
+        UUPeripheralErrorDelegate delegate = requestMtuDelegate;
+        requestMtuDelegate = null;
+        notifyPeripheralErrorDelegate(delegate, error);
+    }
+
     private void notifyBoolResult(@Nullable final UUPeripheralBoolDelegate delegate, final boolean result)
     {
         try
@@ -1190,6 +1239,11 @@ class UUBluetoothGatt
         return formatPeripheralTimerId(READ_RSSI_WATCHDOG_BUCKET);
     }
 
+    private @NonNull String requestMtuWatchdogTimerId()
+    {
+        return formatPeripheralTimerId(REQUEST_MTU_WATCHDOG_BUCKET);
+    }
+
     private @NonNull String pollRssiTimerId()
     {
         return formatPeripheralTimerId(POLL_RSSI_BUCKET);
@@ -1341,6 +1395,21 @@ class UUBluetoothGatt
             }
 
             notifyReadRssiComplete(UUBluetoothError.gattStatusError("onReadRemoteRssi", status));
+        }
+
+        @Override
+        public void onMtuChanged(BluetoothGatt gatt, int mtu, int status)
+        {
+            debugLog("onMtuChanged", "device: " + peripheral.getAddress() + ", mtu: " + mtu + ", status: " + status);
+
+            peripheral.setNegotiatedMtuSize(null);
+
+            if (status == BluetoothGatt.GATT_SUCCESS)
+            {
+                peripheral.setNegotiatedMtuSize(mtu);
+            }
+
+            notifyReqeustMtuComplete(UUBluetoothError.gattStatusError("onMtuChanged", status));
         }
     }
 

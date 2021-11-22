@@ -105,6 +105,20 @@ public class UUPeripheral implements Parcelable
 
     private BluetoothGatt bluetoothGatt;
 
+    private Integer negotiatedMtuSize = null;
+
+
+    @Nullable
+    public Integer getNegotiatedMtuSize()
+    {
+        return negotiatedMtuSize;
+    }
+
+    public void setNegotiatedMtuSize(Integer negotiatedMtuSize)
+    {
+        this.negotiatedMtuSize = negotiatedMtuSize;
+    }
+
     @VisibleForTesting
     public UUPeripheral()
     {
@@ -270,6 +284,15 @@ public class UUPeripheral implements Parcelable
         if (gatt != null)
         {
             gatt.requestHighPriority(delegate);
+        }
+    }
+
+    public void requestMtuSize(final long timeout, final int mtuSize, @NonNull final UUPeripheralErrorDelegate delegate)
+    {
+        UUBluetoothGatt gatt = UUBluetoothGatt.gattForPeripheral(this);
+        if (gatt != null)
+        {
+            gatt.requestMtuSize(timeout, mtuSize, delegate);
         }
     }
 
