@@ -25,7 +25,6 @@ public class UUPeripheralOperation<T extends UUPeripheral>
     private long serviceDiscoveryTimeout = UUPeripheral.Defaults.ServiceDiscoveryTimeout;
     private long readTimeout = UUPeripheral.Defaults.OperationTimeout;
     private long writeTimeout = UUPeripheral.Defaults.OperationTimeout;
-    private final @NonNull ArrayList<UUID> servicesToDiscover = new ArrayList<>();
 
 
     UUPeripheralOperation(@NonNull final T peripheral)
