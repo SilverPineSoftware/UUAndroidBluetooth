@@ -1,13 +1,14 @@
 package com.silverpine.uu.bluetooth;
 
 import android.bluetooth.BluetoothGatt;
-import androidx.annotation.NonNull;
-import androidx.annotation.Nullable;
+
+import com.silverpine.uu.core.UUString;
 
 import java.util.HashMap;
 import java.util.Locale;
 
-import com.silverpine.uu.core.UUString;
+import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
 
 /**
  * Container class for UUBluetooth errors
@@ -85,6 +86,16 @@ public class UUBluetoothError
     public @NonNull HashMap<String, String> getErrorDetails()
     {
         return errorDetails;
+    }
+
+    /**
+     * Wrapper method to return a success error object
+     *
+     * @return a UUBluetoothError object
+     */
+    public static @NonNull UUBluetoothError success()
+    {
+        return new UUBluetoothError(UUBluetoothErrorCode.Success);
     }
 
     /**

@@ -7,6 +7,11 @@ package com.silverpine.uu.bluetooth;
 public enum UUBluetoothErrorCode
 {
     /**
+     * An operation was successful.
+     */
+    Success(0),
+
+    /**
      *  An operation attempt was manually timed out by UUCoreBluetooth
      */
     Timeout(1),

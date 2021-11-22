@@ -138,6 +138,10 @@ class UUBluetoothGatt
     void disconnect(@Nullable final UUBluetoothError error)
     {
         disconnectError = error;
+        if (disconnectError == null)
+        {
+            disconnectError = UUBluetoothError.success();
+        }
 
         String timerId = disconnectWatchdogTimerId();
 
@@ -1302,6 +1306,13 @@ class UUBluetoothGatt
                 if (err == null)
                 {
                     err = UUBluetoothError.disconnectedError();
+                }
+
+                // Special case - If an operation has finished with a success error code, then don't
+                // pass it up to the caller.
+                if (err.getErrorCode() == UUBluetoothErrorCode.Success)
+                {
+                    err = null;
                 }
 
                 notifyDisconnected(err);
