@@ -27,7 +27,7 @@ public class UUPeripheralOperation<T extends UUPeripheral>
     private long writeTimeout = UUPeripheral.Defaults.OperationTimeout;
 
 
-    UUPeripheralOperation(@NonNull final T peripheral)
+    public UUPeripheralOperation(@NonNull final T peripheral)
     {
         this.peripheral = peripheral;
     }
