@@ -5,6 +5,8 @@ import android.bluetooth.BluetoothGattService;
 
 import com.silverpine.uu.core.UUNonNullObjectDelegate;
 import com.silverpine.uu.core.UUObjectDelegate;
+import com.silverpine.uu.core.UUString;
+import com.silverpine.uu.logging.UULog;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -146,7 +148,7 @@ public class UUPeripheralOperation<T extends UUPeripheral>
 
     public void end(@Nullable final UUBluetoothError error)
     {
-        //NSLog("**** Ending Operation with error: \(error?.localizedDescription ?? "nil")")
+        UULog.debug(getClass(), "end", "**** Ending Operation with error: " + UUString.safeToString(error));
         peripheral.disconnect(error);
     }
 
