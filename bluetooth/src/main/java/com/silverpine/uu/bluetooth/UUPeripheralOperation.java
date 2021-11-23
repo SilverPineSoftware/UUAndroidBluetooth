@@ -5,6 +5,7 @@ import android.bluetooth.BluetoothGattService;
 
 import com.silverpine.uu.core.UUNonNullObjectDelegate;
 import com.silverpine.uu.core.UUObjectDelegate;
+import com.silverpine.uu.core.UURunnable;
 import com.silverpine.uu.core.UUString;
 import com.silverpine.uu.logging.UULog;
 
@@ -118,25 +119,49 @@ public class UUPeripheralOperation<T extends UUPeripheral>
         UUNonNullObjectDelegate.safeInvoke(completion, discovered);
     }
 
-    public void write(@NonNull final byte[] data, @NonNull final UUID toCharacteristic, @NonNull final UUObjectDelegate<UUBluetoothError> completion)
+    public void write(@NonNull final byte[] data, @NonNull final UUID toCharacteristic, @NonNull final Runnable completion)
     {
         requireDiscoveredCharacteristic(toCharacteristic,
             characteristic -> peripheral.writeCharacteristic(characteristic, data, writeTimeout, (peripheral1, characteristic1, error) ->
-                UUObjectDelegate.safeInvoke(completion, error)));
+            {
+                if (error != null)
+                {
+                    end(error);
+                    return;
+                }
+
+                UURunnable.safeInvoke(completion);
+            }));
     }
 
-    public void wwor(@NonNull final byte[] data, @NonNull final UUID toCharacteristic, @NonNull final UUObjectDelegate<UUBluetoothError> completion)
+    public void wwor(@NonNull final byte[] data, @NonNull final UUID toCharacteristic, @NonNull final Runnable completion)
     {
         requireDiscoveredCharacteristic(toCharacteristic,
             characteristic -> peripheral.writeCharacteristicWithoutResponse(characteristic, data, writeTimeout, (peripheral1, characteristic1, error) ->
-                UUObjectDelegate.safeInvoke(completion, error)));
+            {
+                if (error != null)
+                {
+                    end(error);
+                    return;
+                }
+
+                UURunnable.safeInvoke(completion);
+            }));
     }
 
     public void read(@NonNull final UUID fromCharacteristic, @NonNull final UUObjectDelegate<byte[]> completion)
     {
         requireDiscoveredCharacteristic(fromCharacteristic, characteristic ->
             peripheral.readCharacteristic(characteristic, readTimeout, (peripheral1, characteristic1, error) ->
-                UUObjectDelegate.safeInvoke(completion, characteristic.getValue())));
+            {
+                if (error != null)
+                {
+                    end(error);
+                    return;
+                }
+
+                UUObjectDelegate.safeInvoke(completion, characteristic.getValue());
+            }));
     }
 
     public final void start(UUObjectDelegate<UUBluetoothError> completion)
