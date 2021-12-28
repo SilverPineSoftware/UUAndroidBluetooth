@@ -3,22 +3,26 @@ package com.silverpine.uu.bluetooth;
 import android.bluetooth.BluetoothGattCharacteristic;
 import android.bluetooth.BluetoothGattService;
 
+import com.silverpine.uu.core.UUData;
 import com.silverpine.uu.core.UUNonNullObjectDelegate;
 import com.silverpine.uu.core.UUObjectDelegate;
 import com.silverpine.uu.core.UURunnable;
 import com.silverpine.uu.core.UUString;
 import com.silverpine.uu.logging.UULog;
 
+import java.nio.ByteOrder;
+import java.nio.charset.Charset;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
+import kotlin.text.Charsets;
 
 public class UUPeripheralOperation<T extends UUPeripheral>
 {
-    private final @NonNull T peripheral;
+    protected final @NonNull T peripheral;
     private @Nullable UUObjectDelegate<UUBluetoothError> operationCallback;
     private final @NonNull ArrayList<BluetoothGattService> discoveredServices = new ArrayList<>();
     private final @NonNull ArrayList<BluetoothGattCharacteristic> discoveredCharacteristics = new ArrayList<>();
@@ -164,6 +168,213 @@ public class UUPeripheralOperation<T extends UUPeripheral>
             }));
     }
 
+    public void readString(@NonNull final UUID fromCharacteristic, @NonNull final Charset charset, @NonNull final UUObjectDelegate<String> completion)
+    {
+        read(fromCharacteristic, data ->
+        {
+            String result = null;
+
+            if (data != null)
+            {
+                result = new String(data, charset);
+            }
+
+            UUObjectDelegate.safeInvoke(completion, result);
+        });
+    }
+
+    public void readUtf8(@NonNull final UUID fromCharacteristic, @NonNull final UUObjectDelegate<String> completion)
+    {
+        readString(fromCharacteristic, Charsets.UTF_8, completion);
+    }
+
+    public void readUInt8(@NonNull final UUID fromCharacteristic, @NonNull final UUObjectDelegate<Integer> completion)
+    {
+        read(fromCharacteristic, data ->
+        {
+            Integer result = null;
+
+            if (data != null && data.length >= Byte.BYTES)
+            {
+                result = UUData.readUInt8(data, 0);
+            }
+
+            UUObjectDelegate.safeInvoke(completion, result);
+        });
+    }
+
+    public void readUInt16(@NonNull final UUID fromCharacteristic, @NonNull final ByteOrder byteOrder, @NonNull final UUObjectDelegate<Integer> completion)
+    {
+        read(fromCharacteristic, data ->
+        {
+            Integer result = null;
+
+            if (data != null && data.length >= Short.BYTES)
+            {
+                result = UUData.readUInt16(byteOrder, data, 0);
+            }
+
+            UUObjectDelegate.safeInvoke(completion, result);
+        });
+    }
+
+    public void readUInt32(@NonNull final UUID fromCharacteristic, @NonNull final ByteOrder byteOrder, @NonNull final UUObjectDelegate<Long> completion)
+    {
+        read(fromCharacteristic, data ->
+        {
+            Long result = null;
+
+            if (data != null && data.length >= Integer.BYTES)
+            {
+                result = UUData.readUInt32(byteOrder, data, 0);
+            }
+
+            UUObjectDelegate.safeInvoke(completion, result);
+        });
+    }
+
+    public void readUInt64(@NonNull final UUID fromCharacteristic, @NonNull final ByteOrder byteOrder, @NonNull final UUObjectDelegate<Long> completion)
+    {
+        read(fromCharacteristic, data ->
+        {
+            Long result = null;
+
+            if (data != null && data.length >= Long.BYTES)
+            {
+                result = UUData.readUInt64(byteOrder, data, 0);
+            }
+
+            UUObjectDelegate.safeInvoke(completion, result);
+        });
+    }
+
+    public void readInt8(@NonNull final UUID fromCharacteristic, @NonNull final UUObjectDelegate<Byte> completion)
+    {
+        read(fromCharacteristic, data ->
+        {
+            Byte result = null;
+
+            if (data != null && data.length >= Byte.BYTES)
+            {
+                result = UUData.readInt8(data, 0);
+            }
+
+            UUObjectDelegate.safeInvoke(completion, result);
+        });
+    }
+
+    public void readInt16(@NonNull final UUID fromCharacteristic, @NonNull final ByteOrder byteOrder, @NonNull final UUObjectDelegate<Short> completion)
+    {
+        read(fromCharacteristic, data ->
+        {
+            Short result = null;
+
+            if (data != null && data.length >= Short.BYTES)
+            {
+                result = UUData.readInt16(byteOrder, data, 0);
+            }
+
+            UUObjectDelegate.safeInvoke(completion, result);
+        });
+    }
+
+    public void readInt32(@NonNull final UUID fromCharacteristic, @NonNull final ByteOrder byteOrder, @NonNull final UUObjectDelegate<Integer> completion)
+    {
+        read(fromCharacteristic, data ->
+        {
+            Integer result = null;
+
+            if (data != null && data.length >= Integer.BYTES)
+            {
+                result = UUData.readInt32(byteOrder, data, 0);
+            }
+
+            UUObjectDelegate.safeInvoke(completion, result);
+        });
+    }
+
+    public void readInt64(@NonNull final UUID fromCharacteristic, @NonNull final ByteOrder byteOrder, @NonNull final UUObjectDelegate<Long> completion)
+    {
+        read(fromCharacteristic, data ->
+        {
+            Long result = null;
+
+            if (data != null && data.length >= Long.BYTES)
+            {
+                result = UUData.readInt64(byteOrder, data, 0);
+            }
+
+            UUObjectDelegate.safeInvoke(completion, result);
+        });
+    }
+
+    public void write(@NonNull final String value, @NonNull final Charset charset, @NonNull final UUID toCharacteristic, @NonNull final Runnable completion)
+    {
+        byte[] buffer = value.getBytes(charset);
+        write(buffer, toCharacteristic, completion);
+    }
+
+    public void writeUtf8(@NonNull final String value, @NonNull final UUID toCharacteristic, @NonNull final Runnable completion)
+    {
+        write(value, Charsets.UTF_8, toCharacteristic, completion);
+    }
+
+    public void writeUInt8(int value, @NonNull final UUID toCharacteristic, @NonNull final Runnable completion)
+    {
+        byte[] buffer = new byte[Byte.BYTES];
+        UUData.writeUInt8(buffer, 0, value);
+        write(buffer, toCharacteristic, completion);
+    }
+
+    public void writeUInt16(int value, @NonNull final ByteOrder byteOrder, @NonNull final UUID toCharacteristic, @NonNull final Runnable completion)
+    {
+        byte[] buffer = new byte[Short.BYTES];
+        UUData.writeUInt16(byteOrder, buffer, 0, value);
+        write(buffer, toCharacteristic, completion);
+    }
+
+    public void writeUInt32(long value, @NonNull final ByteOrder byteOrder, @NonNull final UUID toCharacteristic, @NonNull final Runnable completion)
+    {
+        byte[] buffer = new byte[Integer.BYTES];
+        UUData.writeUInt32(byteOrder, buffer, 0, value);
+        write(buffer, toCharacteristic, completion);
+    }
+
+    public void writeUInt64(long value, @NonNull final ByteOrder byteOrder, @NonNull final UUID toCharacteristic, @NonNull final Runnable completion)
+    {
+        byte[] buffer = new byte[Long.BYTES];
+        UUData.writeUInt64(byteOrder, buffer, 0, value);
+        write(buffer, toCharacteristic, completion);
+    }
+
+    public void writeInt8(byte value, @NonNull final UUID toCharacteristic, @NonNull final Runnable completion)
+    {
+        byte[] buffer = new byte[Byte.BYTES];
+        UUData.writeInt8(buffer, 0, value);
+        write(buffer, toCharacteristic, completion);
+    }
+
+    public void writeInt16(short value, @NonNull final ByteOrder byteOrder, @NonNull final UUID toCharacteristic, @NonNull final Runnable completion)
+    {
+        byte[] buffer = new byte[Short.BYTES];
+        UUData.writeInt16(byteOrder, buffer, 0, value);
+        write(buffer, toCharacteristic, completion);
+    }
+
+    public void writeInt32(int value, @NonNull final ByteOrder byteOrder, @NonNull final UUID toCharacteristic, @NonNull final Runnable completion)
+    {
+        byte[] buffer = new byte[Integer.BYTES];
+        UUData.writeInt32(byteOrder, buffer, 0, value);
+        write(buffer, toCharacteristic, completion);
+    }
+
+    public void writeInt64(long value, @NonNull final ByteOrder byteOrder, @NonNull final UUID toCharacteristic, @NonNull final Runnable completion)
+    {
+        byte[] buffer = new byte[Long.BYTES];
+        UUData.writeInt64(byteOrder, buffer, 0, value);
+        write(buffer, toCharacteristic, completion);
+    }
+
     public final void start(UUObjectDelegate<UUBluetoothError> completion)
     {
         operationCallback = completion;
@@ -200,7 +411,6 @@ public class UUPeripheralOperation<T extends UUPeripheral>
 
             if (services.isEmpty())
             {
-                //let err = NSError(domain: "Err", code: -1, userInfo: [NSLocalizedDescriptionKey: "No services were discovered"])
                 UUBluetoothError err = new UUBluetoothError(UUBluetoothErrorCode.OperationFailed);
                 end(err);
                 return;
