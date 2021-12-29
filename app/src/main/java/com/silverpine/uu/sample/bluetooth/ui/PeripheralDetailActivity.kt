@@ -9,9 +9,9 @@ import com.silverpine.uu.bluetooth.UUPeripheral
 import com.silverpine.uu.core.UUThread
 import com.silverpine.uu.sample.bluetooth.BR
 import com.silverpine.uu.sample.bluetooth.R
+import com.silverpine.uu.sample.bluetooth.viewmodel.LabelValueViewModel
 import com.silverpine.uu.sample.bluetooth.viewmodel.SectionHeaderViewModel
 import com.silverpine.uu.sample.bluetooth.viewmodel.ServiceViewModel
-import com.silverpine.uu.sample.bluetooth.viewmodel.UUPeripheralViewModel
 import com.silverpine.uu.ux.UUMenuHandler
 import com.silverpine.uu.ux.UURecyclerActivity
 import com.silverpine.uu.ux.uuRequireParcelable
@@ -30,7 +30,7 @@ class PeripheralDetailActivity : UURecyclerActivity() {
     }
 
     override fun setupAdapter(recyclerView: RecyclerView) {
-        adapter.registerClass(UUPeripheralViewModel::class.java, R.layout.peripheral_header, BR.vm)
+        adapter.registerClass(LabelValueViewModel::class.java, R.layout.label_value_row, BR.vm)
         adapter.registerClass(ServiceViewModel::class.java, R.layout.service_row, BR.vm)
         adapter.registerClass(SectionHeaderViewModel::class.java, R.layout.section_header, BR.vm)
     }
@@ -94,7 +94,12 @@ class PeripheralDetailActivity : UURecyclerActivity() {
         {
             val tmp = ArrayList<ViewModel>()
             tmp.add(SectionHeaderViewModel(R.string.info))
-            tmp.add(UUPeripheralViewModel(peripheral, applicationContext))
+            tmp.add(LabelValueViewModel(R.string.address_label.load(), peripheral.address))
+            tmp.add(LabelValueViewModel(R.string.name_label.load(), peripheral.name))
+            tmp.add(LabelValueViewModel(R.string.state_label.load(), peripheral.getConnectionState(applicationContext).name))
+            tmp.add(LabelValueViewModel(R.string.rssi_label.load(), "${peripheral.rssi}"))
+            tmp.add(LabelValueViewModel(R.string.mtu_size_label.load(), "${peripheral.negotiatedMtuSize}"))
+
             tmp.add(SectionHeaderViewModel(R.string.services))
             tmp.addAll(peripheral.discoveredServices().map { ServiceViewModel(it) })
             adapter.update(tmp)

@@ -23,6 +23,11 @@ class Strings
     }
 }
 
+fun Int.load(): String
+{
+    return Strings.load(this)
+}
+
 fun BluetoothGattService.uuTypeAsString(): String
 {
     return when (type)
