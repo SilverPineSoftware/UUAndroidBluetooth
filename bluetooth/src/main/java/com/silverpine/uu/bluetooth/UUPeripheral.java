@@ -50,6 +50,12 @@ public class UUPeripheral implements Parcelable
     private static final byte DATA_TYPE_COMPLETE_LOCAL_NAME = 0x09;
     private static final byte DATA_TYPE_MANUFACTURING_DATA = (byte) 0xFF;
 
+    // Number of overhead bytes that need to be accounted for when calculating the max read/write
+    // size of a BLE characteristics
+    private static final int BLE_PACKET_SIZE_MIN = 23; // 20 + BLE_PACKET_OVERHEAD
+    private static final int BLE_PACKET_SIZE_MAX = 512;
+    private static final int BLE_PACKET_OVERHEAD = 3;
+
     public enum ConnectionState
     {
         Connecting,
@@ -292,7 +298,20 @@ public class UUPeripheral implements Parcelable
         UUBluetoothGatt gatt = UUBluetoothGatt.gattForPeripheral(this);
         if (gatt != null)
         {
-            gatt.requestMtuSize(timeout, mtuSize, delegate);
+            gatt.requestMtuSize(timeout, mtuSize, (peripheral, error) ->
+            {
+                if (error == null)
+                {
+                    this.setNegotiatedMtuSize(peripheral.negotiatedMtuSize);
+                }
+                else
+                {
+                    this.setNegotiatedMtuSize(null);
+                }
+
+                delegate.onComplete(peripheral, error);
+
+            });
         }
     }
 
