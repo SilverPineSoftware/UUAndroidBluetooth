@@ -92,8 +92,8 @@ class HomeActivity: UURecyclerActivity()
             {
                 if (err != null)
                 {
-                    uuPrompt("Read Devie Info",
-                        "Error: ${err.toString()}",
+                    uuPrompt("Read Device Info",
+                        "Error: $err",
                         "OK",
                         null,
                         true,
