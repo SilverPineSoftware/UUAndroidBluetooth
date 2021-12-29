@@ -46,6 +46,7 @@
     <string name="toggle_notify">Toggle Notify</string>
     <string name="hex">hex</string>
     <string name="utf8">utf8</string>
+    <string name="mtu_size_label">MTU Size:</string>
 
 
 </resources>
