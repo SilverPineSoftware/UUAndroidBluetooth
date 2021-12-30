@@ -1,5 +1,10 @@
 package com.silverpine.uu.bluetooth;
 
+import android.content.Context;
+import android.content.res.Resources;
+
+import androidx.annotation.Nullable;
+
 /**
  * UUBluetooth error codes.
  */
@@ -12,7 +17,7 @@ public enum UUBluetoothErrorCode
     Success(0),
 
     /**
-     *  An operation attempt was manually timed out by UUCoreBluetooth
+     * An operation attempt was manually timed out by UUCoreBluetooth
      */
     Timeout(1),
 
@@ -58,5 +63,40 @@ public enum UUBluetoothErrorCode
     UUBluetoothErrorCode(final int val)
     {
         rawValue = val;
+    }
+
+    /**
+     *
+     * @return a developer friendly error description
+     */
+    @Nullable
+    public String getErrorDescription()
+    {
+        Context ctx = UUBluetooth.requireApplicationContext();
+        Resources rez = ctx.getResources();
+
+        switch (this)
+        {
+            case Timeout:
+                return rez.getString(R.string.error_description_timeout);
+
+            case NotConnected:
+                return rez.getString(R.string.error_description_not_connected);
+
+            case OperationFailed:
+                return rez.getString(R.string.error_description_operation_failed);
+
+            case ConnectionFailed:
+                return rez.getString(R.string.error_description_connection_failed);
+
+            case Disconnected:
+                return rez.getString(R.string.error_description_disconnected);
+
+            case PreconditionFailed:
+                return rez.getString(R.string.error_description_precondition_failed);
+
+            default:
+                return null;
+        }
     }
 }

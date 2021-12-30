@@ -98,6 +98,7 @@ class UUBluetoothGatt
             {
                 debugLog("connect", "Connected to: " + peripheral);
                 UUTimer.cancelActiveTimer(timerId);
+                disconnectError = null;
                 delegate.onConnected(peripheral);
             }
 
@@ -110,28 +111,20 @@ class UUBluetoothGatt
             }
         };
 
-        UUTimer.startTimer(timerId, timeout, peripheral, new UUTimer.TimerDelegate()
-        {
-            @Override
-            public void onTimer(@NonNull UUTimer timer, @Nullable Object userInfo)
-            {
-                debugLog("connect", "Connect timeout: " + peripheral);
+        UUTimer.startTimer(timerId, timeout, peripheral,
+        (timer, userInfo) -> {
+            debugLog("connect", "Connect timeout: " + peripheral);
 
-                disconnect(UUBluetoothError.timeoutError());
-            }
+            disconnect(UUBluetoothError.timeoutError());
         });
 
         this.disconnectTimeout = disconnectTimeout;
-        UUThread.runOnMainThread(new Runnable()
+        UUThread.runOnMainThread(() ->
         {
-            @Override
-            public void run()
-            {
-                debugLog("connect", "Connecting to: " + peripheral + ", gattAuto: " + connectGattAutoFlag);
+            debugLog("connect", "Connecting to: " + peripheral + ", gattAuto: " + connectGattAutoFlag);
 
-                disconnectError = null;
-                bluetoothGatt = peripheral.getBluetoothDevice().connectGatt(context, connectGattAutoFlag, bluetoothGattCallback, BluetoothDevice.TRANSPORT_LE);
-            }
+            disconnectError = UUBluetoothError.connectionFailedError();
+            bluetoothGatt = peripheral.getBluetoothDevice().connectGatt(context, connectGattAutoFlag, bluetoothGattCallback, BluetoothDevice.TRANSPORT_LE);
         });
     }
 

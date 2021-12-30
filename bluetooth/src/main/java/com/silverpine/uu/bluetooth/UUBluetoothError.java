@@ -2,10 +2,7 @@ package com.silverpine.uu.bluetooth;
 
 import android.bluetooth.BluetoothGatt;
 
-import com.silverpine.uu.core.UUString;
-
-import java.util.HashMap;
-import java.util.Locale;
+import com.silverpine.uu.core.UUError;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
@@ -14,58 +11,39 @@ import androidx.annotation.Nullable;
  * Container class for UUBluetooth errors
  */
 @SuppressWarnings("unused")
-public class UUBluetoothError
+public class UUBluetoothError extends UUError
 {
     /**
      * Lookup key for errorDetails for the failing underlying bluetooth method name.
      */
-    public static final String DETAIL_KEY_METHOD_NAME = "methodName";
-    public static final String DETAIL_KEY_MESSAGE = "message";
-    public static final String DETAIL_KEY_GATT_STATUS = "gattStatus";
+    public static final String USER_INFO_KEY_METHOD_NAME = "methodName";
+    public static final String USER_INFO_KEY_MESSAGE = "message";
+    public static final String USER_INFO_KEY_GATT_STATUS = "gattStatus";
+    public static final String DOMAIN = "UUBluetoothError";
 
-    private Exception caughtException = null;
     private final UUBluetoothErrorCode errorCode;
-    private final HashMap<String, String> errorDetails = new HashMap<>();
 
     /**
      * Creates a UUBluetoothError from an error code
      *
      * @param errorCode the error code
      */
-    public UUBluetoothError(final @NonNull UUBluetoothErrorCode errorCode)
+    UUBluetoothError(final @NonNull UUBluetoothErrorCode errorCode)
     {
+        this(errorCode, null);
+    }
+
+    /**
+     * Creates a UUBluetoothError
+     *
+     * @param errorCode error code
+     * @param caughtException caught exception
+     */
+    UUBluetoothError(final @NonNull UUBluetoothErrorCode errorCode, @Nullable final Exception caughtException)
+    {
+        super(DOMAIN, errorCode.getRawValue(), caughtException);
         this.errorCode = errorCode;
-    }
-
-    /**
-     * To string override
-     *
-     * @return string
-     */
-    @Override
-    public String toString()
-    {
-        try
-        {
-            return String.format(Locale.US, "code: %s, details: %s, ex: %s",
-                    UUString.safeToString(errorCode),
-                    UUString.safeToString(errorDetails),
-                    UUString.safeToString(caughtException));
-        }
-        catch (Exception ex)
-        {
-            return super.toString();
-        }
-    }
-
-    /**
-     * Returns the captured exception
-     *
-     * @return an Exception object
-     */
-    public @Nullable Exception getCaughtException()
-    {
-        return caughtException;
+        setErrorDescription(errorCode.getErrorDescription());
     }
 
     /**
@@ -76,16 +54,6 @@ public class UUBluetoothError
     public @NonNull UUBluetoothErrorCode getErrorCode()
     {
         return errorCode;
-    }
-
-    /**
-     * Gets error details
-     *
-     * @return error details dictionary
-     */
-    public @NonNull HashMap<String, String> getErrorDetails()
-    {
-        return errorDetails;
     }
 
     /**
@@ -106,6 +74,16 @@ public class UUBluetoothError
     public static @NonNull UUBluetoothError notConnectedError()
     {
         return new UUBluetoothError(UUBluetoothErrorCode.NotConnected);
+    }
+
+    /**
+     * Wrapper method to return a connection failed error
+     *
+     * @return a UUBluetoothError object
+     */
+    public static @NonNull UUBluetoothError connectionFailedError()
+    {
+        return new UUBluetoothError(UUBluetoothErrorCode.ConnectionFailed);
     }
 
     /**
@@ -139,7 +117,7 @@ public class UUBluetoothError
     public static @NonNull UUBluetoothError operationFailedError(@NonNull final String method)
     {
         UUBluetoothError err = new UUBluetoothError(UUBluetoothErrorCode.OperationFailed);
-        err.errorDetails.put(DETAIL_KEY_METHOD_NAME, method);
+        err.addUserInfo(USER_INFO_KEY_METHOD_NAME, method);
         return err;
     }
 
@@ -153,7 +131,7 @@ public class UUBluetoothError
     public static @NonNull UUBluetoothError preconditionFailedError(@NonNull final String message)
     {
         UUBluetoothError err = new UUBluetoothError(UUBluetoothErrorCode.PreconditionFailed);
-        err.errorDetails.put(DETAIL_KEY_MESSAGE, message);
+        err.addUserInfo(USER_INFO_KEY_MESSAGE, message);
         return err;
     }
 
@@ -167,9 +145,7 @@ public class UUBluetoothError
      */
     public static @NonNull UUBluetoothError operationFailedError(@NonNull final Exception caughtException)
     {
-        UUBluetoothError err = new UUBluetoothError(UUBluetoothErrorCode.OperationFailed);
-        err.caughtException = caughtException;
-        return err;
+        return new UUBluetoothError(UUBluetoothErrorCode.OperationFailed, caughtException);
     }
 
     /**
@@ -186,8 +162,8 @@ public class UUBluetoothError
         if (gattStatus != BluetoothGatt.GATT_SUCCESS)
         {
             UUBluetoothError err = new UUBluetoothError(UUBluetoothErrorCode.OperationFailed);
-            err.errorDetails.put(DETAIL_KEY_METHOD_NAME, method);
-            err.errorDetails.put(DETAIL_KEY_GATT_STATUS, String.valueOf(gattStatus));
+            err.addUserInfo(USER_INFO_KEY_METHOD_NAME, method);
+            err.addUserInfo(USER_INFO_KEY_GATT_STATUS, String.valueOf(gattStatus));
             return err;
         }
         else
