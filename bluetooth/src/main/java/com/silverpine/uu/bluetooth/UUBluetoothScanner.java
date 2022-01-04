@@ -1,6 +1,5 @@
 package com.silverpine.uu.bluetooth;
 
-import android.annotation.TargetApi;
 import android.bluetooth.BluetoothAdapter;
 import android.bluetooth.BluetoothDevice;
 import android.bluetooth.BluetoothManager;
@@ -18,7 +17,6 @@ import com.silverpine.uu.core.UUListDelegate;
 import com.silverpine.uu.core.UUThread;
 import com.silverpine.uu.core.UUWorkerThread;
 
-import java.lang.reflect.Constructor;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -38,18 +36,18 @@ public class UUBluetoothScanner<T extends UUPeripheral>
     private UUWorkerThread scanThread;
     private boolean isScanning = false;
     private ArrayList<UUPeripheralFilter> scanFilters;
-    private Class<T> peripheralClass;
+    private UUPeripheralFactory<T> peripheralFactory;
     private final HashMap<String, Boolean> ignoredDevices = new HashMap<>();
 
     private final HashMap<String, T> nearbyPeripherals = new HashMap<>();
     private UUListDelegate<T> nearbyPeripheralCallback = null;
 
-    public UUBluetoothScanner(@NonNull final Context context, @NonNull final Class<T> clazz)
+    public UUBluetoothScanner(@NonNull final Context context, @NonNull final UUPeripheralFactory<T> factory)
     {
         BluetoothManager bluetoothManager = (BluetoothManager) context.getSystemService(Context.BLUETOOTH_SERVICE);
         bluetoothAdapter = bluetoothManager.getAdapter();
         scanThread = new UUWorkerThread("UUBluetoothScanner");
-        peripheralClass = clazz;
+        peripheralFactory = factory;
     }
 
     public void startScanning(
@@ -96,49 +94,6 @@ public class UUBluetoothScanner<T extends UUPeripheral>
             }
         });
     }
-
-    /*
-    public static boolean canUseLollipopScanning()
-    {
-        return (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP);
-    }
-
-    public boolean useLollipopScanning()
-    {
-        return useLollipopScanning;
-    }
-
-    public void setUseLollipopScanning(final boolean useLollipopScanning)
-    {
-        this.useLollipopScanning = useLollipopScanning;
-    }
-
-    public boolean shouldUseLollipopScanning()
-    {
-        return canUseLollipopScanning() && useLollipopScanning();
-    }*/
-
-    /*
-    @SuppressWarnings("deprecation")
-    private void startLegacyScan(final @Nullable UUID[] serviceUuidList)
-    {
-        stopLegacyScan();
-
-        try
-        {
-            bluetoothAdapter.startLeScan(serviceUuidList);
-        }
-        catch (Exception ex)
-        {
-            debugLog("startLegacyScan", ex);
-        }
-    }
-
-    @Override
-    public void onLeScan(BluetoothDevice device, int rssi, byte[] scanRecord)
-    {
-        handleLegacyScanResult(device, rssi, scanRecord, listener);
-    }*/
 
     private void startScan(final @Nullable UUID[] serviceUuidList)
     {
@@ -216,43 +171,6 @@ public class UUBluetoothScanner<T extends UUPeripheral>
         }
     }
 
-    /*
-    private void handleLegacyScanResult(final BluetoothDevice device, final int rssi, final byte[] scanRecord, final Listener delegate)
-    {
-        try
-        {
-            if (!isScanning)
-            {
-                debugLog("handleLegacyScanResult", "Not scanning, ignoring advertisement from " + device.getAddress());
-                return;
-            }
-
-            if (isIgnored(device))
-            {
-                //debugLog("handleLegacyScanResult", "Ignoring advertisement from " + device.getAddress());
-                return;
-            }
-
-            scanThread.post(new Runnable()
-            {
-                @Override
-                public void run()
-                {
-                    UUPeripheral peripheral = peripheralFactory.fromScanResult(device, rssi, scanRecord);
-                    if (shouldDiscoverPeripheral(peripheral))
-                    {
-                        handlePeripheralFound(peripheral, delegate);
-                    }
-                }
-            });
-        }
-        catch (Exception ex)
-        {
-            debugLog("handleLegacyScanResult", ex);
-        }
-    }*/
-
-    //@TargetApi(21)
     private void handleScanResult(final ScanResult scanResult)
     {
         try
@@ -288,16 +206,17 @@ public class UUBluetoothScanner<T extends UUPeripheral>
         }
     }
 
+    @Nullable
     private T createPeripheral(@NonNull final ScanResult scanResult)
     {
         try
         {
-            Constructor<T> ctor = peripheralClass.getConstructor(BluetoothDevice.class, int.class, byte[].class);
-            return ctor.newInstance(scanResult.getDevice(), scanResult.getRssi(), safeGetScanRecord(scanResult));
+            return peripheralFactory.createPeripheral(scanResult.getDevice(), scanResult.getRssi(), safeGetScanRecord(scanResult));
         }
         catch (Exception ex)
         {
-            throw new RuntimeException("Failed to construct peripheral", ex);
+            debugLog("createPeripheral", ex);
+            return null;
         }
     }
 
@@ -360,43 +279,6 @@ public class UUBluetoothScanner<T extends UUPeripheral>
 
     }
 
-    /*
-    private void notifyPeripheralFound(final UUPeripheral peripheral, final Listener delegate)
-    {
-        try
-        {
-            if (delegate != null && peripheral != null)
-            {
-                delegate.onPeripheralFound(this, peripheral);
-            }
-        }
-        catch (Exception ex)
-        {
-            debugLog("notifyPeripheralFound", ex);
-        }
-    }*/
-
-    /*
-    @SuppressWarnings("deprecation")
-    private void stopLegacyScan()
-    {
-        try
-        {
-            if (bluetoothAdapter != null)
-            {
-                bluetoothAdapter.stopLeScan(this);
-            }
-            else
-            {
-                debugLog("stopLegacyScan", "Bluetooth adapter is null, nothing to do.");
-            }
-        }
-        catch (Exception ex)
-        {
-            debugLog("stopLegacyScan", ex);
-        }
-    }*/
-
     private void stopScan()
     {
         try
@@ -438,8 +320,13 @@ public class UUBluetoothScanner<T extends UUPeripheral>
         ignoredDevices.clear();
     }
 
-    private boolean shouldDiscoverPeripheral(final @NonNull UUPeripheral peripheral)
+    private boolean shouldDiscoverPeripheral(final @Nullable UUPeripheral peripheral)
     {
+        if (peripheral == null)
+        {
+            return false;
+        }
+
         if (scanFilters != null)
         {
             for (UUPeripheralFilter filter : scanFilters)
@@ -456,25 +343,10 @@ public class UUBluetoothScanner<T extends UUPeripheral>
                     return false;
                 }
             }
+        }
 
-            return true;
-        }
-        else
-        {
-            return true;
-        }
+        return true;
     }
-
-    /*
-    private static class DefaultPeripheralFactory implements UUPeripheralFactory<UUPeripheral>
-    {
-        @NonNull
-        @Override
-        public UUPeripheral fromScanResult(@NonNull BluetoothDevice device, int rssi, @NonNull byte[] scanRecord)
-        {
-            return new UUPeripheral(device, rssi, scanRecord);
-        }
-    }*/
 
     private static void debugLog(final String method, final String message)
     {
