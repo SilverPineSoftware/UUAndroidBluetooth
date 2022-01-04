@@ -58,7 +58,8 @@ dependencies {
     implementation 'androidx.lifecycle:lifecycle-runtime-ktx:2.4.0'
 
     implementation project(':bluetooth')
-    implementation 'com.silverpine.uu:uu-ux:0.0.2-SNAPSHOT'
+    implementation 'com.silverpine.uu:uu-core:0.0.3'
+    implementation 'com.silverpine.uu:uu-ux:0.0.3'
 
     testImplementation 'junit:junit:4.13.2'
 
