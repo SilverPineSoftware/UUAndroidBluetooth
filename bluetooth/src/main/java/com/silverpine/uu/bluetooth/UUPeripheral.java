@@ -220,7 +220,7 @@ public class UUPeripheral implements Parcelable
             firstAdvertisementTime = System.currentTimeMillis();
         }
 
-        debugLog("updateAdvertisement", totalBeaconCount + ", timeSinceLastAdvertisement: " + getTimeSinceLastUpdate());
+        debugLog("updateAdvertisement", totalBeaconCount + ", timeSinceLastAdvertisement: " + getTimeSinceLastUpdate() + ", scanRecord: " + UUString.byteToHex(scanRecord));
 
         lastAdvertisementTime = System.currentTimeMillis();
         ++totalBeaconCount;

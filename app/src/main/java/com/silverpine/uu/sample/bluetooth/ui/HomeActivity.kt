@@ -139,6 +139,8 @@ class HomeActivity: UURecyclerActivity()
     {
         Log.d(TAG, "startScanning")
 
+        adapter.update(listOf())
+
         scanner.startScanning(null, arrayListOf(PeripheralFilter()))
         { list ->
 
