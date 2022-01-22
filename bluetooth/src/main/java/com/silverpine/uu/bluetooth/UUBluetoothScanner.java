@@ -35,8 +35,8 @@ public class UUBluetoothScanner<T extends UUPeripheral>
     private ScanCallback scanCallback;
     private UUWorkerThread scanThread;
     private boolean isScanning = false;
-    private ArrayList<UUPeripheralFilter> scanFilters;
-    private UUPeripheralFactory<T> peripheralFactory;
+    private ArrayList<UUPeripheralFilter<T>> scanFilters;
+    private final UUPeripheralFactory<T> peripheralFactory;
     private final HashMap<String, Boolean> ignoredDevices = new HashMap<>();
 
     private final HashMap<String, T> nearbyPeripherals = new HashMap<>();
@@ -52,7 +52,7 @@ public class UUBluetoothScanner<T extends UUPeripheral>
 
     public void startScanning(
         final @Nullable UUID[] serviceUuidList,
-        final @Nullable ArrayList<UUPeripheralFilter> filters,
+        final @Nullable ArrayList<UUPeripheralFilter<T>> filters,
         final @NonNull UUListDelegate<T> callback)
     {
         UUThread.runOnMainThread(new Runnable()
@@ -61,7 +61,6 @@ public class UUBluetoothScanner<T extends UUPeripheral>
             public void run()
             {
                 scanFilters = filters;
-                //peripheralFactory = factory;
                 isScanning = true;
                 clearIgnoredDevices();
                 nearbyPeripheralCallback = callback;
@@ -187,16 +186,12 @@ public class UUBluetoothScanner<T extends UUPeripheral>
                 return;
             }
 
-            scanThread.post(new Runnable()
+            scanThread.post(() ->
             {
-                @Override
-                public void run()
+                T peripheral = createPeripheral(scanResult);
+                if (shouldDiscoverPeripheral(peripheral))
                 {
-                    T peripheral = createPeripheral(scanResult);
-                    if (shouldDiscoverPeripheral(peripheral))
-                    {
-                        handlePeripheralFound(peripheral);
-                    }
+                    handlePeripheralFound(peripheral);
                 }
             });
         }
@@ -320,7 +315,7 @@ public class UUBluetoothScanner<T extends UUPeripheral>
         ignoredDevices.clear();
     }
 
-    private boolean shouldDiscoverPeripheral(final @Nullable UUPeripheral peripheral)
+    private boolean shouldDiscoverPeripheral(final @Nullable T peripheral)
     {
         if (peripheral == null)
         {
@@ -329,7 +324,7 @@ public class UUBluetoothScanner<T extends UUPeripheral>
 
         if (scanFilters != null)
         {
-            for (UUPeripheralFilter filter : scanFilters)
+            for (UUPeripheralFilter<T> filter : scanFilters)
             {
                 UUPeripheralFilter.Result result = filter.shouldDiscoverPeripheral(peripheral);
                 if (result == UUPeripheralFilter.Result.IgnoreForever)

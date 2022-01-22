@@ -2,7 +2,6 @@ package com.silverpine.uu.sample.bluetooth.ui
 
 import android.Manifest
 import android.app.AlertDialog
-import android.bluetooth.BluetoothDevice
 import android.content.Intent
 import android.os.Bundle
 import android.util.Log
@@ -11,7 +10,6 @@ import androidx.lifecycle.ViewModel
 import androidx.recyclerview.widget.RecyclerView
 import com.silverpine.uu.bluetooth.UUBluetoothScanner
 import com.silverpine.uu.bluetooth.UUPeripheral
-import com.silverpine.uu.bluetooth.UUPeripheralFactory
 import com.silverpine.uu.bluetooth.UUPeripheralFilter
 import com.silverpine.uu.core.UUPermissions
 import com.silverpine.uu.core.UUThread
@@ -239,7 +237,7 @@ class HomeActivity: UURecyclerActivity()
         UUPermissions.handleRequestPermissionsResult(this, requestCode, permissions, grantResults)
     }
 
-    inner class PeripheralFilter: UUPeripheralFilter
+    inner class PeripheralFilter: UUPeripheralFilter<UUPeripheral>
     {
         override fun shouldDiscoverPeripheral(peripheral: UUPeripheral): UUPeripheralFilter.Result
         {

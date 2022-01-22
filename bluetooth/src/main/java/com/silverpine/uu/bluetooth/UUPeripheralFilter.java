@@ -6,7 +6,7 @@ import androidx.annotation.NonNull;
  * Interface that callers of UUBluetoothScanner can use to manually filter
  * BTLE advertisements
  */
-public interface UUPeripheralFilter
+public interface UUPeripheralFilter<T extends UUPeripheral>
 {
     enum Result
     {
@@ -22,5 +22,5 @@ public interface UUPeripheralFilter
      *
      * @return value indicating whether the peripheral should be ignored for this one advertisement or forever, or discovered
      */
-    Result shouldDiscoverPeripheral(@NonNull UUPeripheral peripheral);
+    Result shouldDiscoverPeripheral(@NonNull T peripheral);
 }
