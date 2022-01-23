@@ -13,6 +13,7 @@ import android.os.Parcelable;
 import android.util.Log;
 
 import com.silverpine.uu.core.UUData;
+import com.silverpine.uu.core.UUError;
 import com.silverpine.uu.core.UUObjectDelegate;
 import com.silverpine.uu.core.UUParcel;
 import com.silverpine.uu.core.UUString;
@@ -319,7 +320,7 @@ public class UUPeripheral implements Parcelable
         final long connectTimeout,
         final long disconnectTimeout,
         @NonNull final Runnable connected,
-        @NonNull final UUObjectDelegate<UUBluetoothError> disconnected)
+        @NonNull final UUObjectDelegate<UUError> disconnected)
     {
         UUBluetoothGatt gatt = UUBluetoothGatt.gattForPeripheral(this);
         if (gatt != null)
@@ -333,7 +334,7 @@ public class UUPeripheral implements Parcelable
                 }
 
                 @Override
-                public void onDisconnected(@NonNull UUPeripheral peripheral, @Nullable UUBluetoothError error)
+                public void onDisconnected(@NonNull UUPeripheral peripheral, @Nullable UUError error)
                 {
                     UUObjectDelegate.safeInvoke(disconnected, error);
                 }
@@ -341,7 +342,7 @@ public class UUPeripheral implements Parcelable
         }
     }
 
-    public void disconnect(@Nullable final UUBluetoothError error)
+    public void disconnect(@Nullable final UUError error)
     {
         UUBluetoothGatt gatt = UUBluetoothGatt.gattForPeripheral(this);
         if (gatt != null)
@@ -515,15 +516,6 @@ public class UUPeripheral implements Parcelable
     public long getTimeSinceLastUpdate()
     {
         return System.currentTimeMillis() - lastAdvertisementTime;
-    }
-
-    public void cancelAllTimers()
-    {
-        UUBluetoothGatt gatt = UUBluetoothGatt.gattForPeripheral(this);
-        if (gatt != null)
-        {
-            gatt.cancelAllTimers();
-        }
     }
 
     private void parseScanRecord()

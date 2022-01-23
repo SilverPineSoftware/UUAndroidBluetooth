@@ -8,6 +8,7 @@ import android.bluetooth.BluetoothGattDescriptor;
 import android.content.Context;
 import android.os.Build;
 
+import com.silverpine.uu.core.UUError;
 import com.silverpine.uu.core.UUString;
 import com.silverpine.uu.core.UUThread;
 import com.silverpine.uu.core.UUTimer;
@@ -54,7 +55,7 @@ class UUBluetoothGatt
     private UUPeripheralErrorDelegate requestMtuDelegate;
     private UUPeripheralDelegate pollRssiDelegate;
 
-    private UUBluetoothError disconnectError;
+    private UUError disconnectError;
 
     private final HashMap<String, UUCharacteristicDelegate> readCharacteristicDelegates = new HashMap<>();
     private final HashMap<String, UUCharacteristicDelegate> writeCharacteristicDelegates = new HashMap<>();
@@ -103,10 +104,10 @@ class UUBluetoothGatt
             }
 
             @Override
-            public void onDisconnected(@NonNull UUPeripheral peripheral, @Nullable UUBluetoothError error)
+            public void onDisconnected(@NonNull UUPeripheral peripheral, @Nullable UUError error)
             {
                 debugLog("connect", "Disconnected from: " + peripheral + ", error: " + error);
-                cancelAllTimers();
+                cleanupAfterDisconnect();
                 delegate.onDisconnected(peripheral, error);
             }
         };
@@ -128,7 +129,7 @@ class UUBluetoothGatt
         });
     }
 
-    void disconnect(@Nullable final UUBluetoothError error)
+    void disconnect(@Nullable final UUError error)
     {
         disconnectError = error;
         if (disconnectError == null)
@@ -155,6 +156,21 @@ class UUBluetoothGatt
         });
 
         disconnectGattOnMainThread();
+    }
+
+    private void clearDelegates()
+    {
+        connectionDelegate = null;
+        serviceDiscoveryDelegate = null;
+        readRssiDelegate = null;
+        requestMtuDelegate = null;
+        pollRssiDelegate = null;
+        readCharacteristicDelegates.clear();
+        writeCharacteristicDelegates.clear();
+        characteristicChangedDelegates.clear();
+        setNotifyDelegates.clear();
+        readDescriptorDelegates.clear();
+        writeDescriptorDelegates.clear();
     }
 
     private boolean requestHighPriority()
@@ -240,7 +256,7 @@ class UUBluetoothGatt
         serviceDiscoveryDelegate = new UUPeripheralErrorDelegate()
         {
             @Override
-            public void onComplete(@NonNull UUPeripheral peripheral, @Nullable UUBluetoothError error)
+            public void onComplete(@NonNull UUPeripheral peripheral, @Nullable UUError error)
             {
                 debugLog("discoverServices", "Service Discovery complete: " + peripheral + ", error: " + error);
                 UUTimer.cancelActiveTimer(timerId);
@@ -296,7 +312,7 @@ class UUBluetoothGatt
         UUCharacteristicDelegate readCharacteristicDelegate = new UUCharacteristicDelegate()
         {
             @Override
-            public void onComplete(@NonNull UUPeripheral peripheral, @NonNull BluetoothGattCharacteristic characteristic, @Nullable UUBluetoothError error)
+            public void onComplete(@NonNull UUPeripheral peripheral, @NonNull BluetoothGattCharacteristic characteristic, @Nullable UUError error)
             {
                 debugLog("readCharacteristic", "Read characteristic complete: " + peripheral + ", error: " + error + ", data: " + UUString.byteToHex(characteristic.getValue()));
                 UUTimer.cancelActiveTimer(timerId);
@@ -354,7 +370,7 @@ class UUBluetoothGatt
         UUDescriptorDelegate readDescriptorDelegate = new UUDescriptorDelegate()
         {
             @Override
-            public void onComplete(@NonNull UUPeripheral peripheral, @NonNull BluetoothGattDescriptor descriptor, @Nullable UUBluetoothError error)
+            public void onComplete(@NonNull UUPeripheral peripheral, @NonNull BluetoothGattDescriptor descriptor, @Nullable UUError error)
             {
                 debugLog("readDescriptor", "Read descriptor complete: " + peripheral + ", error: " + error + ", data: " + UUString.byteToHex(descriptor.getValue()));
                 removeReadDescriptorDelegate(descriptor);
@@ -413,7 +429,7 @@ class UUBluetoothGatt
         UUDescriptorDelegate writeDescriptorDelegate = new UUDescriptorDelegate()
         {
             @Override
-            public void onComplete(@NonNull UUPeripheral peripheral, @NonNull BluetoothGattDescriptor descriptor, @Nullable UUBluetoothError error)
+            public void onComplete(@NonNull UUPeripheral peripheral, @NonNull BluetoothGattDescriptor descriptor, @Nullable UUError error)
             {
                 debugLog("readDescriptor", "Write descriptor complete: " + peripheral + ", error: " + error + ", data: " + UUString.byteToHex(descriptor.getValue()));
                 removeWriteDescriptorDelegate(descriptor);
@@ -476,7 +492,7 @@ class UUBluetoothGatt
         UUCharacteristicDelegate setNotifyDelegate = new UUCharacteristicDelegate()
         {
             @Override
-            public void onComplete(@NonNull UUPeripheral peripheral, @NonNull BluetoothGattCharacteristic characteristic, @Nullable UUBluetoothError error)
+            public void onComplete(@NonNull UUPeripheral peripheral, @NonNull BluetoothGattCharacteristic characteristic, @Nullable UUError error)
             {
                 debugLog("setNotifyState", "Set characteristic notify complete: " + peripheral + ", error: " + error + ", data: " + UUString.byteToHex(characteristic.getValue()));
                 removeSetNotifyDelegate(characteristic);
@@ -544,7 +560,7 @@ class UUBluetoothGatt
                 writeDescriptor(descriptor, data, timeoutLeft, new UUDescriptorDelegate()
                 {
                     @Override
-                    public void onComplete(@NonNull UUPeripheral peripheral, @NonNull BluetoothGattDescriptor descriptor, @Nullable UUBluetoothError error)
+                    public void onComplete(@NonNull UUPeripheral peripheral, @NonNull BluetoothGattDescriptor descriptor, @Nullable UUError error)
                     {
                         notifyCharacteristicNotifyStateChanged(characteristic, error);
                     }
@@ -583,7 +599,7 @@ class UUBluetoothGatt
         UUCharacteristicDelegate writeCharacteristicDelegate = new UUCharacteristicDelegate()
         {
             @Override
-            public void onComplete(@NonNull UUPeripheral peripheral, @NonNull BluetoothGattCharacteristic characteristic, @Nullable UUBluetoothError error)
+            public void onComplete(@NonNull UUPeripheral peripheral, @NonNull BluetoothGattCharacteristic characteristic, @Nullable UUError error)
             {
                 debugLog("writeCharacteristic", "Write characteristic complete: " + peripheral + ", error: " + error + ", data: " + UUString.byteToHex(characteristic.getValue()));
                 removeWriteCharacteristicDelegate(characteristic);
@@ -644,7 +660,7 @@ class UUBluetoothGatt
         readRssiDelegate = new UUPeripheralErrorDelegate()
         {
             @Override
-            public void onComplete(@NonNull UUPeripheral peripheral, @Nullable UUBluetoothError error)
+            public void onComplete(@NonNull UUPeripheral peripheral, @Nullable UUError error)
             {
                 debugLog("readRssi", "Read RSSI complete: " + peripheral + ", error: " + error);
                 UUTimer.cancelActiveTimer(timerId);
@@ -703,7 +719,7 @@ class UUBluetoothGatt
         readRssi(TIMEOUT_DISABLED, new UUPeripheralErrorDelegate()
         {
             @Override
-            public void onComplete(@NonNull final UUPeripheral peripheral, @Nullable UUBluetoothError error)
+            public void onComplete(@NonNull final UUPeripheral peripheral, @Nullable UUError error)
             {
                 debugLog("rssiPoll",
                     String.format(Locale.US, "RSSI (%d) Updated for %s-%s, error: %s",
@@ -775,7 +791,7 @@ class UUBluetoothGatt
         }
     }
 
-    private void notifyDisconnectDelegate(final @Nullable UUConnectionDelegate delegate, final @Nullable UUBluetoothError error)
+    private void notifyDisconnectDelegate(final @Nullable UUConnectionDelegate delegate, final @Nullable UUError error)
     {
         try
         {
@@ -790,7 +806,7 @@ class UUBluetoothGatt
         }
     }
 
-    private void notifyPeripheralErrorDelegate(final @Nullable UUPeripheralErrorDelegate delegate, final @Nullable UUBluetoothError error)
+    private void notifyPeripheralErrorDelegate(final @Nullable UUPeripheralErrorDelegate delegate, final @Nullable UUError error)
     {
         try
         {
@@ -820,7 +836,7 @@ class UUBluetoothGatt
         }
     }
 
-    private void notifyCharacteristicDelegate(final @Nullable UUCharacteristicDelegate delegate, final @NonNull BluetoothGattCharacteristic characteristic, final @Nullable UUBluetoothError error)
+    private void notifyCharacteristicDelegate(final @Nullable UUCharacteristicDelegate delegate, final @NonNull BluetoothGattCharacteristic characteristic, final @Nullable UUError error)
     {
         try
         {
@@ -835,7 +851,7 @@ class UUBluetoothGatt
         }
     }
 
-    private void notifyDescriptorDelegate(final @Nullable UUDescriptorDelegate delegate, final @NonNull BluetoothGattDescriptor descriptor, final @Nullable UUBluetoothError error)
+    private void notifyDescriptorDelegate(final @Nullable UUDescriptorDelegate delegate, final @NonNull BluetoothGattDescriptor descriptor, final @Nullable UUError error)
     {
         try
         {
@@ -871,7 +887,7 @@ class UUBluetoothGatt
         return bluetoothGatt;
     }
 
-    private void notifyDisconnected(final @Nullable UUBluetoothError error)
+    private void notifyDisconnected(final @Nullable UUError error)
     {
         closeGatt();
         peripheral.setBluetoothGatt(null);
@@ -881,35 +897,35 @@ class UUBluetoothGatt
         notifyDisconnectDelegate(delegate, error);
     }
 
-    private void notifyServicesDiscovered(final @Nullable UUBluetoothError error)
+    private void notifyServicesDiscovered(final @Nullable UUError error)
     {
         UUPeripheralErrorDelegate delegate = serviceDiscoveryDelegate;
         serviceDiscoveryDelegate = null;
         notifyPeripheralErrorDelegate(delegate, error);
     }
 
-    private void notifyDescriptorWritten(final @NonNull BluetoothGattDescriptor descriptor, final @Nullable UUBluetoothError error)
+    private void notifyDescriptorWritten(final @NonNull BluetoothGattDescriptor descriptor, final @Nullable UUError error)
     {
         UUDescriptorDelegate delegate = getWriteDescriptorDelegate(descriptor);
         removeWriteDescriptorDelegate(descriptor);
         notifyDescriptorDelegate(delegate, descriptor, error);
     }
 
-    private void notifyCharacteristicNotifyStateChanged(final @NonNull BluetoothGattCharacteristic characteristic, final @Nullable UUBluetoothError error)
+    private void notifyCharacteristicNotifyStateChanged(final @NonNull BluetoothGattCharacteristic characteristic, final @Nullable UUError error)
     {
         UUCharacteristicDelegate delegate = getSetNotifyDelegate(characteristic);
         removeSetNotifyDelegate(characteristic);
         notifyCharacteristicDelegate(delegate, characteristic, error);
     }
 
-    private void notifyCharacteristicWritten(final @NonNull BluetoothGattCharacteristic characteristic, final @Nullable UUBluetoothError error)
+    private void notifyCharacteristicWritten(final @NonNull BluetoothGattCharacteristic characteristic, final @Nullable UUError error)
     {
         UUCharacteristicDelegate delegate = getWriteCharacteristicDelegate(characteristic);
         removeWriteCharacteristicDelegate(characteristic);
         notifyCharacteristicDelegate(delegate, characteristic, error);
     }
 
-    private void notifyCharacteristicRead(final @NonNull BluetoothGattCharacteristic characteristic, final @Nullable UUBluetoothError error)
+    private void notifyCharacteristicRead(final @NonNull BluetoothGattCharacteristic characteristic, final @Nullable UUError error)
     {
         UUCharacteristicDelegate delegate = getReadCharacteristicDelegate(characteristic);
         removeReadCharacteristicDelegate(characteristic);
@@ -922,21 +938,21 @@ class UUBluetoothGatt
         notifyCharacteristicDelegate(delegate, characteristic, null);
     }
 
-    private void notifyDescriptorRead(final @NonNull BluetoothGattDescriptor descriptor, final @Nullable UUBluetoothError error)
+    private void notifyDescriptorRead(final @NonNull BluetoothGattDescriptor descriptor, final @Nullable UUError error)
     {
         UUDescriptorDelegate delegate = getReadDescriptorDelegate(descriptor);
         removeReadDescriptorDelegate(descriptor);
         notifyDescriptorDelegate(delegate, descriptor, error);
     }
 
-    private void notifyReadRssiComplete(final @Nullable UUBluetoothError error)
+    private void notifyReadRssiComplete(final @Nullable UUError error)
     {
         UUPeripheralErrorDelegate delegate = readRssiDelegate;
         readRssiDelegate = null;
         notifyPeripheralErrorDelegate(delegate, error);
     }
 
-    private void notifyReqeustMtuComplete(final @Nullable UUBluetoothError error)
+    private void notifyReqeustMtuComplete(final @Nullable UUError error)
     {
         UUPeripheralErrorDelegate delegate = requestMtuDelegate;
         requestMtuDelegate = null;
@@ -1246,7 +1262,13 @@ class UUBluetoothGatt
         return formatPeripheralTimerId(POLL_RSSI_BUCKET);
     }
 
-    public void cancelAllTimers()
+    private void cleanupAfterDisconnect()
+    {
+        cancelAllTimers();
+        clearDelegates();
+    }
+
+    private void cancelAllTimers()
     {
         try
         {
@@ -1289,7 +1311,7 @@ class UUBluetoothGatt
             }
             else if (newState == BluetoothGatt.STATE_DISCONNECTED)
             {
-                UUBluetoothError err = disconnectError;
+                UUError err = disconnectError;
 
                 if (err == null)
                 {
@@ -1303,7 +1325,7 @@ class UUBluetoothGatt
 
                 // Special case - If an operation has finished with a success error code, then don't
                 // pass it up to the caller.
-                if (err.getErrorCode() == UUBluetoothErrorCode.Success)
+                if (err.getCode() == UUBluetoothErrorCode.Success.getRawValue())
                 {
                     err = null;
                 }

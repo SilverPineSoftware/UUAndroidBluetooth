@@ -11,7 +11,7 @@ import androidx.annotation.Nullable;
  * Container class for UUBluetooth errors
  */
 @SuppressWarnings("unused")
-public class UUBluetoothError extends UUError
+class UUBluetoothError
 {
     /**
      * Lookup key for errorDetails for the failing underlying bluetooth method name.
@@ -21,16 +21,15 @@ public class UUBluetoothError extends UUError
     public static final String USER_INFO_KEY_GATT_STATUS = "gattStatus";
     public static final String DOMAIN = "UUBluetoothError";
 
-    private final UUBluetoothErrorCode errorCode;
-
     /**
-     * Creates a UUBluetoothError from an error code
+     * Creates a UUError
      *
-     * @param errorCode the error code
+     * @param errorCode error code
      */
-    UUBluetoothError(final @NonNull UUBluetoothErrorCode errorCode)
+    @NonNull
+    private static UUError makeError(final @NonNull UUBluetoothErrorCode errorCode)
     {
-        this(errorCode, null);
+        return makeError(errorCode, null);
     }
 
     /**
@@ -39,21 +38,13 @@ public class UUBluetoothError extends UUError
      * @param errorCode error code
      * @param caughtException caught exception
      */
-    UUBluetoothError(final @NonNull UUBluetoothErrorCode errorCode, @Nullable final Exception caughtException)
+    @NonNull
+    private static UUError makeError(final @NonNull UUBluetoothErrorCode errorCode, @Nullable final Exception caughtException)
     {
-        super(DOMAIN, errorCode.getRawValue(), caughtException);
-        this.errorCode = errorCode;
-        setErrorDescription(errorCode.getErrorDescription());
-    }
-
-    /**
-     * Returns the error code
-     *
-     * @return an error code
-     */
-    public @NonNull UUBluetoothErrorCode getErrorCode()
-    {
-        return errorCode;
+        UUError err = new UUError(DOMAIN, errorCode.getRawValue(), caughtException);
+        //this.errorCode = errorCode;
+        err.setErrorDescription(errorCode.getErrorDescription());
+        return err;
     }
 
     /**
@@ -61,9 +52,9 @@ public class UUBluetoothError extends UUError
      *
      * @return a UUBluetoothError object
      */
-    public static @NonNull UUBluetoothError success()
+    public static @NonNull UUError success()
     {
-        return new UUBluetoothError(UUBluetoothErrorCode.Success);
+        return makeError(UUBluetoothErrorCode.Success);
     }
 
     /**
@@ -71,9 +62,9 @@ public class UUBluetoothError extends UUError
      *
      * @return a UUBluetoothError object
      */
-    public static @NonNull UUBluetoothError notConnectedError()
+    public static @NonNull UUError notConnectedError()
     {
-        return new UUBluetoothError(UUBluetoothErrorCode.NotConnected);
+        return makeError(UUBluetoothErrorCode.NotConnected);
     }
 
     /**
@@ -81,9 +72,9 @@ public class UUBluetoothError extends UUError
      *
      * @return a UUBluetoothError object
      */
-    public static @NonNull UUBluetoothError connectionFailedError()
+    public static @NonNull UUError connectionFailedError()
     {
-        return new UUBluetoothError(UUBluetoothErrorCode.ConnectionFailed);
+        return makeError(UUBluetoothErrorCode.ConnectionFailed);
     }
 
     /**
@@ -91,9 +82,9 @@ public class UUBluetoothError extends UUError
      *
      * @return a UUBluetoothError object
      */
-    public static @NonNull UUBluetoothError timeoutError()
+    public static @NonNull UUError timeoutError()
     {
-        return new UUBluetoothError(UUBluetoothErrorCode.Timeout);
+        return makeError(UUBluetoothErrorCode.Timeout);
     }
 
     /**
@@ -101,9 +92,9 @@ public class UUBluetoothError extends UUError
      *
      * @return a UUBluetoothError object
      */
-    public static @NonNull UUBluetoothError disconnectedError()
+    public static @NonNull UUError disconnectedError()
     {
-        return new UUBluetoothError(UUBluetoothErrorCode.Disconnected);
+        return makeError(UUBluetoothErrorCode.Disconnected);
     }
 
     /**
@@ -114,9 +105,9 @@ public class UUBluetoothError extends UUError
      *
      * @return a UUBluetoothError object
      */
-    public static @NonNull UUBluetoothError operationFailedError(@NonNull final String method)
+    public static @NonNull UUError operationFailedError(@NonNull final String method)
     {
-        UUBluetoothError err = new UUBluetoothError(UUBluetoothErrorCode.OperationFailed);
+        UUError err = makeError(UUBluetoothErrorCode.OperationFailed);
         err.addUserInfo(USER_INFO_KEY_METHOD_NAME, method);
         return err;
     }
@@ -128,9 +119,9 @@ public class UUBluetoothError extends UUError
      *
      * @return a UUBluetoothError object
      */
-    public static @NonNull UUBluetoothError preconditionFailedError(@NonNull final String message)
+    public static @NonNull UUError preconditionFailedError(@NonNull final String message)
     {
-        UUBluetoothError err = new UUBluetoothError(UUBluetoothErrorCode.PreconditionFailed);
+        UUError err = makeError(UUBluetoothErrorCode.PreconditionFailed);
         err.addUserInfo(USER_INFO_KEY_MESSAGE, message);
         return err;
     }
@@ -143,9 +134,9 @@ public class UUBluetoothError extends UUError
      *
      * @return a UUBluetoothError object
      */
-    public static @NonNull UUBluetoothError operationFailedError(@NonNull final Exception caughtException)
+    public static @NonNull UUError operationFailedError(@NonNull final Exception caughtException)
     {
-        return new UUBluetoothError(UUBluetoothErrorCode.OperationFailed, caughtException);
+        return makeError(UUBluetoothErrorCode.OperationFailed, caughtException);
     }
 
     /**
@@ -157,11 +148,11 @@ public class UUBluetoothError extends UUError
      *
      * @return a UUBluetoothError object
      */
-    public static @Nullable UUBluetoothError gattStatusError(@NonNull final String method, final int gattStatus)
+    public static @Nullable UUError gattStatusError(@NonNull final String method, final int gattStatus)
     {
         if (gattStatus != BluetoothGatt.GATT_SUCCESS)
         {
-            UUBluetoothError err = new UUBluetoothError(UUBluetoothErrorCode.OperationFailed);
+            UUError err = makeError(UUBluetoothErrorCode.OperationFailed);
             err.addUserInfo(USER_INFO_KEY_METHOD_NAME, method);
             err.addUserInfo(USER_INFO_KEY_GATT_STATUS, String.valueOf(gattStatus));
             return err;

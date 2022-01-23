@@ -1,5 +1,7 @@
 package com.silverpine.uu.bluetooth;
 
+import com.silverpine.uu.core.UUError;
+
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 
@@ -15,5 +17,5 @@ public interface UUBluetoothSppErrorDataDelegate
      * @param data returned data
      * @param error an error if one occurs
      */
-    void onComplete(final @NonNull UUBluetoothSpp session, @Nullable final byte[] data, final @Nullable UUBluetoothError error);
+    void onComplete(final @NonNull UUBluetoothSpp session, @Nullable final byte[] data, final @Nullable UUError error);
 }

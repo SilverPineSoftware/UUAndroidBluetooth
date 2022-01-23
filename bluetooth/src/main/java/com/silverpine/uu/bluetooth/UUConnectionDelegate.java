@@ -1,5 +1,7 @@
 package com.silverpine.uu.bluetooth;
 
+import com.silverpine.uu.core.UUError;
+
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 
@@ -21,5 +23,5 @@ public interface UUConnectionDelegate
      * @param peripheral the peripheral that was disconnect
      * @param error the error (if any) that caused the disconnect to occur
      */
-    void onDisconnected(final @NonNull UUPeripheral peripheral, final @Nullable UUBluetoothError error);
+    void onDisconnected(final @NonNull UUPeripheral peripheral, final @Nullable UUError error);
 }

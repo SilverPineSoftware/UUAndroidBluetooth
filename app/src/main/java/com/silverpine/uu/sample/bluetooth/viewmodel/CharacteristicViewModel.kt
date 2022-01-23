@@ -8,12 +8,9 @@ import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import com.silverpine.uu.bluetooth.UUBluetooth
-import com.silverpine.uu.bluetooth.UUBluetoothError
-import com.silverpine.uu.bluetooth.UUCharacteristicDelegate
 import com.silverpine.uu.bluetooth.UUPeripheral
 import com.silverpine.uu.core.UUString
 import com.silverpine.uu.core.UUThread
-import com.silverpine.uu.logging.UULog
 import com.silverpine.uu.sample.bluetooth.R
 import com.silverpine.uu.sample.bluetooth.ui.Strings
 

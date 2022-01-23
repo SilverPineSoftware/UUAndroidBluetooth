@@ -4,6 +4,7 @@ import android.bluetooth.BluetoothGattCharacteristic;
 import android.bluetooth.BluetoothGattService;
 
 import com.silverpine.uu.core.UUData;
+import com.silverpine.uu.core.UUError;
 import com.silverpine.uu.core.UUNonNullObjectDelegate;
 import com.silverpine.uu.core.UUObjectDelegate;
 import com.silverpine.uu.core.UURunnable;
@@ -23,7 +24,7 @@ import kotlin.text.Charsets;
 public class UUPeripheralOperation<T extends UUPeripheral>
 {
     protected final @NonNull T peripheral;
-    private @Nullable UUObjectDelegate<UUBluetoothError> operationCallback;
+    private @Nullable UUObjectDelegate<UUError> operationCallback;
     private final @NonNull ArrayList<BluetoothGattService> discoveredServices = new ArrayList<>();
     private final @NonNull ArrayList<BluetoothGattCharacteristic> discoveredCharacteristics = new ArrayList<>();
     private final @NonNull ArrayList<BluetoothGattService> servicesNeedingCharacteristicDiscovery = new ArrayList<>();
@@ -102,7 +103,7 @@ public class UUPeripheralOperation<T extends UUPeripheral>
         BluetoothGattService discovered = findDiscoveredService(uuid);
         if (discovered == null)
         {
-            UUBluetoothError err = new UUBluetoothError(UUBluetoothErrorCode.OperationFailed);
+            UUError err = UUBluetoothError.operationFailedError("requireDiscoveredService");
             end(err);
             return;
         }
@@ -115,7 +116,7 @@ public class UUPeripheralOperation<T extends UUPeripheral>
         BluetoothGattCharacteristic discovered = findDiscoveredCharacteristic(uuid);
         if (discovered == null)
         {
-            UUBluetoothError err = new UUBluetoothError(UUBluetoothErrorCode.OperationFailed);
+            UUError err = UUBluetoothError.operationFailedError("requireDiscoveredCharacteristic");
             end(err);
             return;
         }
@@ -375,20 +376,20 @@ public class UUPeripheralOperation<T extends UUPeripheral>
         write(buffer, toCharacteristic, completion);
     }
 
-    public final void start(UUObjectDelegate<UUBluetoothError> completion)
+    public final void start(UUObjectDelegate<UUError> completion)
     {
         operationCallback = completion;
 
         peripheral.connect(connectTimeout, disconnectTimeout, this::handleConnected, this::handleDisconnection);
     }
 
-    public void end(@Nullable final UUBluetoothError error)
+    public void end(@Nullable final UUError error)
     {
         UULog.debug(getClass(), "end", "**** Ending Operation with error: " + UUString.safeToString(error));
         peripheral.disconnect(error);
     }
 
-    protected void execute(@NonNull final UUObjectDelegate<UUBluetoothError> completion)
+    protected void execute(@NonNull final UUObjectDelegate<UUError> completion)
     {
         UUObjectDelegate.safeInvoke(completion, null);
     }
@@ -411,7 +412,7 @@ public class UUPeripheralOperation<T extends UUPeripheral>
 
             if (services.isEmpty())
             {
-                UUBluetoothError err = new UUBluetoothError(UUBluetoothErrorCode.OperationFailed);
+                UUError err = UUBluetoothError.operationFailedError("No Services Found");
                 end(err);
                 return;
             }
@@ -422,9 +423,9 @@ public class UUPeripheralOperation<T extends UUPeripheral>
         });
     }
 
-    private void handleDisconnection(@Nullable final UUBluetoothError disconnectError)
+    private void handleDisconnection(@Nullable final UUError disconnectError)
     {
-        UUObjectDelegate<UUBluetoothError> callback = operationCallback;
+        UUObjectDelegate<UUError> callback = operationCallback;
         operationCallback = null;
         UUObjectDelegate.safeInvoke(callback, disconnectError);
     }
@@ -453,5 +454,47 @@ public class UUPeripheralOperation<T extends UUPeripheral>
         execute(this::end);
     }
 
+
+    public void startListeningForDataChanges(@NonNull final UUID characteristicUuid, @NonNull final UUObjectDelegate<byte[]> dataChanged, @NonNull final Runnable completion)
+    {
+        requireDiscoveredCharacteristic(characteristicUuid, characteristic ->
+            peripheral.setNotifyState(characteristic, true, readTimeout,
+            (peripheral, characteristic1, error) ->
+            {
+                if (error != null)
+                {
+                    end(error);
+                    return;
+                }
+
+                dataChanged.onCompleted(characteristic1.getValue());
+
+            }, (peripheral, characteristic12, error) ->
+            {
+                if (error != null)
+                {
+                    end(error);
+                    return;
+                }
+
+                completion.run();
+
+            }));
+    }
+
+    public void stopListeningForDataChanges(@NonNull final UUID characteristicUuid, @NonNull final Runnable completion)
+    {
+        requireDiscoveredCharacteristic(characteristicUuid, characteristic ->
+            peripheral.setNotifyState(characteristic, false, readTimeout, null, (peripheral1, characteristic1, error) ->
+            {
+                if (error != null)
+                {
+                    end(error);
+                    return;
+                }
+
+                completion.run();
+            }));
+    }
 }
 

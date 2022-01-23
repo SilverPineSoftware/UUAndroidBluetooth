@@ -2,6 +2,8 @@ package com.silverpine.uu.bluetooth;
 
 import android.bluetooth.BluetoothGattCharacteristic;
 
+import com.silverpine.uu.core.UUError;
+
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 
@@ -17,5 +19,5 @@ public interface UUCharacteristicDelegate
      * @param characteristic the characteristic being interacted with
      * @param error an error if one occurs
      */
-    void onComplete(final @NonNull UUPeripheral peripheral, final @NonNull BluetoothGattCharacteristic characteristic, final @Nullable UUBluetoothError error);
+    void onComplete(final @NonNull UUPeripheral peripheral, final @NonNull BluetoothGattCharacteristic characteristic, final @Nullable UUError error);
 }

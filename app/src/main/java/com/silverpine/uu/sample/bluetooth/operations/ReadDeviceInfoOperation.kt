@@ -1,9 +1,9 @@
 package com.silverpine.uu.sample.bluetooth.operations
 
 import com.silverpine.uu.bluetooth.UUBluetoothConstants
-import com.silverpine.uu.bluetooth.UUBluetoothError
 import com.silverpine.uu.bluetooth.UUPeripheral
 import com.silverpine.uu.bluetooth.UUPeripheralOperation
+import com.silverpine.uu.core.UUError
 import com.silverpine.uu.core.UUObjectDelegate
 import java.util.*
 
@@ -12,7 +12,7 @@ class ReadDeviceInfoOperation(peripheral: UUPeripheral): UUPeripheralOperation<U
     var deviceName: String? = null
     var mfgName: String? = null
 
-    override fun execute(completion: UUObjectDelegate<UUBluetoothError>)
+    override fun execute(completion: UUObjectDelegate<UUError>)
     {
         readUtf8String(UUBluetoothConstants.Characteristics.DEVICE_NAME_UUID)
         { deviceNameResult ->
