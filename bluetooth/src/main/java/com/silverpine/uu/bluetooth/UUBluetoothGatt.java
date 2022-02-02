@@ -27,7 +27,7 @@ import androidx.annotation.Nullable;
  */
 class UUBluetoothGatt
 {
-    private static boolean LOGGING_ENABLED = true;//UULog.LOGGING_ENABLED;
+    private static boolean LOGGING_ENABLED = UULog.LOGGING_ENABLED;
 
     // Internal Constants
     private static final String CONNECT_WATCHDOG_BUCKET = "UUBluetoothConnectWatchdogBucket";

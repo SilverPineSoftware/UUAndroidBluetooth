@@ -10,13 +10,13 @@ import android.bluetooth.BluetoothProfile;
 import android.content.Context;
 import android.os.Parcel;
 import android.os.Parcelable;
-import android.util.Log;
 
 import com.silverpine.uu.core.UUData;
 import com.silverpine.uu.core.UUError;
 import com.silverpine.uu.core.UUObjectDelegate;
 import com.silverpine.uu.core.UUParcel;
 import com.silverpine.uu.core.UUString;
+import com.silverpine.uu.logging.UULog;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -41,7 +41,7 @@ public class UUPeripheral implements Parcelable
         public static final int OperationTimeout = 60000;
     }
 
-    private static boolean LOGGING_ENABLED = true; //UULog.LOGGING_ENABLED;
+    private static boolean LOGGING_ENABLED = UULog.LOGGING_ENABLED;
 
     private static final byte DATA_TYPE_FLAGS                                           = 0x01;
     private static final byte DATA_TYPE_INCOMPLETE_LIST_OF_16_BIT_SERVICE_CLASS_UUIDS   = 0x02;
@@ -791,7 +791,7 @@ public class UUPeripheral implements Parcelable
     {
         if (LOGGING_ENABLED)
         {
-            Log.d("UUPeripheral", method + ": " + message);
+            UULog.debug(UUPeripheral.class, method, message);
         }
     }
 
@@ -799,7 +799,7 @@ public class UUPeripheral implements Parcelable
     {
         if (LOGGING_ENABLED)
         {
-            Log.d("UUPeripheral", method + ": " + exception.toString());
+            UULog.debug(UUPeripheral.class, method, exception);
         }
     }
 }

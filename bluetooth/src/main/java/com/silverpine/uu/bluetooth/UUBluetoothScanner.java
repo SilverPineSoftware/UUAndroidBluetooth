@@ -16,6 +16,7 @@ import android.util.Log;
 import com.silverpine.uu.core.UUListDelegate;
 import com.silverpine.uu.core.UUThread;
 import com.silverpine.uu.core.UUWorkerThread;
+import com.silverpine.uu.logging.UULog;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -28,7 +29,7 @@ import androidx.annotation.Nullable;
 //@SuppressWarnings("unused")
 public class UUBluetoothScanner<T extends UUPeripheral>
 {
-    private static boolean LOGGING_ENABLED = true;//UULog.LOGGING_ENABLED;
+    private static boolean LOGGING_ENABLED = UULog.LOGGING_ENABLED;
 
     private BluetoothAdapter bluetoothAdapter;
     private BluetoothLeScanner bluetoothLeScanner;
@@ -347,7 +348,7 @@ public class UUBluetoothScanner<T extends UUPeripheral>
     {
         if (LOGGING_ENABLED)
         {
-            Log.d("UUBluetoothScanner", method + ": " + message);
+            UULog.debug(UUBluetoothScanner.class, method, message);
         }
     }
 
@@ -355,7 +356,7 @@ public class UUBluetoothScanner<T extends UUPeripheral>
     {
         if (LOGGING_ENABLED)
         {
-            Log.d("UUBluetoothScanner", method + ": " + exception.toString());
+            UULog.debug(UUBluetoothScanner.class, method, exception);
         }
     }
 }
