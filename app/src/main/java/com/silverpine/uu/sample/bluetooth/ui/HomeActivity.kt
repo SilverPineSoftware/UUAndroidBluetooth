@@ -3,8 +3,10 @@ package com.silverpine.uu.sample.bluetooth.ui
 import android.Manifest
 import android.app.AlertDialog
 import android.content.Intent
+import android.os.Build
 import android.os.Bundle
 import android.util.Log
+import androidx.annotation.RequiresApi
 import androidx.core.util.Pair
 import androidx.lifecycle.ViewModel
 import androidx.recyclerview.widget.RecyclerView
@@ -171,6 +173,12 @@ class HomeActivity: UURecyclerActivity()
     companion object
     {
         const val LOCATION_PERMISSION = Manifest.permission.ACCESS_FINE_LOCATION
+
+        @RequiresApi(Build.VERSION_CODES.S)
+        const val BLUETOOTH_SCAN_PERMISSION = Manifest.permission.BLUETOOTH_SCAN
+
+        @RequiresApi(Build.VERSION_CODES.S)
+        const val BLUETOOTH_CONNECT_PERMISSION = Manifest.permission.BLUETOOTH_CONNECT
     }
 
     private val hasLocationPermission: Boolean
@@ -185,12 +193,52 @@ class HomeActivity: UURecyclerActivity()
             return UUPermissions.canRequestPermission(this, LOCATION_PERMISSION)
         }
 
+    private val hasScanPermission: Boolean
+        @RequiresApi(Build.VERSION_CODES.S)
+        get()
+        {
+            return UUPermissions.hasPermission(applicationContext, BLUETOOTH_SCAN_PERMISSION)
+        }
+
+    private val canRequestScanPermission: Boolean
+        @RequiresApi(Build.VERSION_CODES.S)
+        get()
+        {
+            return UUPermissions.canRequestPermission(this, BLUETOOTH_SCAN_PERMISSION)
+        }
+
+    private val hasConnectPermission: Boolean
+        @RequiresApi(Build.VERSION_CODES.S)
+        get()
+        {
+            return UUPermissions.hasPermission(applicationContext, BLUETOOTH_CONNECT_PERMISSION)
+        }
+
+    private val canRequestConnectPermission: Boolean
+        @RequiresApi(Build.VERSION_CODES.S)
+        get()
+        {
+            return UUPermissions.canRequestPermission(this, BLUETOOTH_CONNECT_PERMISSION)
+        }
+
     private fun refreshPermissions()
     {
-        refreshPermissions(hasLocationPermission)
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S)
+        {
+            refreshPermissionsPostSdk31()
+        }
+        else
+        {
+            refreshPermissionsPreSdk31()
+        }
     }
 
-    private fun refreshPermissions(hasPermissions: Boolean)
+    private fun refreshPermissionsPreSdk31()
+    {
+        refreshPermissionsPreSdk31(hasLocationPermission)
+    }
+
+    private fun refreshPermissionsPreSdk31(hasPermissions: Boolean)
     {
         if (!hasPermissions)
         {
@@ -216,7 +264,46 @@ class HomeActivity: UURecyclerActivity()
                         UUPermissions.requestPermissions(this, LOCATION_PERMISSION, 12276)
                         { _, granted ->
 
-                            refreshPermissions(granted)
+                            refreshPermissionsPreSdk31(granted)
+                        }
+                    }
+                    else
+                    {
+                        uuOpenSystemSettings()
+                    }
+                })
+        }
+    }
+
+    @RequiresApi(Build.VERSION_CODES.S)
+    private fun refreshPermissionsPostSdk31()
+    {
+        val hasPermissions = (hasScanPermission and hasConnectPermission)
+        if (!hasPermissions)
+        {
+            val canRequest = (canRequestScanPermission and canRequestConnectPermission)
+            var msgId = R.string.bluetooth_permission_denied_message
+            var buttonId = R.string.app_settings
+
+            if (canRequest)
+            {
+                msgId = R.string.bluetooth_permission_request_message
+                buttonId = R.string.request_permission
+            }
+
+            uuPrompt(
+                title = R.string.permissions,
+                message = msgId,
+                positiveButtonTextId = buttonId,
+                cancelable = false,
+                positiveAction =
+                {
+                    if (canRequest)
+                    {
+                        UUPermissions.requestMultiplePermissions(this, arrayOf(BLUETOOTH_SCAN_PERMISSION, BLUETOOTH_CONNECT_PERMISSION), 12276)
+                        { _ ->
+
+                            refreshPermissionsPostSdk31()
                         }
                     }
                     else

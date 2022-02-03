@@ -16,10 +16,13 @@
 
 
     <string name="permissions" formatted="false">Permissions</string>
-    <string name="location_permission_request_message" formatted="false">In order to use Bluetooth to scan for BLE peripherals, the application needs permission to access the phone\'s location.  Tap \'Request\' below, and then tap Allow on the next dialog.</string>
     <string name="request_permission" formatted="false">Request</string>
-    <string name="location_permission_denied_message" formatted="false">In order to use Bluetooth to interact with BLE peripherals, the application needs permission to access the phone\'s location. Tap \'App Settings\' below, and then enable location permissions for the app.</string>
     <string name="app_settings" formatted="false">App Settings</string>
+    <string name="location_permission_request_message" formatted="false">In order to use Bluetooth to scan for BLE peripherals, the application needs permission to access the phone\'s location.  Tap \'Request\' below, and then tap Allow on the next dialog.</string>
+    <string name="location_permission_denied_message" formatted="false">In order to use Bluetooth to interact with BLE peripherals, the application needs permission to access the phone\'s location. Tap \'App Settings\' below, and then enable location permissions for the app.</string>
+    <string name="bluetooth_permission_request_message" formatted="false">In order to use Bluetooth to scan for BLE peripherals, the application needs permission to access Bluetooth.  Tap \'Request\' below, and then tap Allow on the next dialog.</string>
+    <string name="bluetooth_permission_denied_message" formatted="false">In order to use Bluetooth to interact with BLE peripherals, the application needs permission to access Bluetooth. Tap \'App Settings\' below, and then enable bluetooth permissions for the app.</string>
+
 
     <string name="connect">Connect</string>
     <string name="disconnect">Disconnect</string>
