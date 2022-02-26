@@ -21,7 +21,6 @@ import com.silverpine.uu.logging.UULog;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 import java.util.UUID;
 
 import androidx.annotation.NonNull;
@@ -38,11 +37,14 @@ public class UUBluetoothScanner<T extends UUPeripheral>
     private UUWorkerThread scanThread;
     private boolean isScanning = false;
     private ArrayList<UUPeripheralFilter<T>> scanFilters;
+    private ArrayList<UUOutOfRangePeripheralFilter<T>> outOfRangeScanFilters;
     private final UUPeripheralFactory<T> peripheralFactory;
     private final HashMap<String, Boolean> ignoredDevices = new HashMap<>();
 
     private final HashMap<String, T> nearbyPeripherals = new HashMap<>();
     private UUListDelegate<T> nearbyPeripheralCallback = null;
+
+    private long outOfRangeFilterEvaluationFrequency = 500;
 
     public UUBluetoothScanner(@NonNull final Context context, @NonNull final UUPeripheralFactory<T> factory)
     {
@@ -55,6 +57,7 @@ public class UUBluetoothScanner<T extends UUPeripheral>
     public void startScanning(
         final @Nullable UUID[] serviceUuidList,
         final @Nullable ArrayList<UUPeripheralFilter<T>> filters,
+        final @Nullable ArrayList<UUOutOfRangePeripheralFilter<T>> outOfRangeFilters,
         final @NonNull UUListDelegate<T> callback)
     {
         UUThread.runOnMainThread(new Runnable()
@@ -63,6 +66,7 @@ public class UUBluetoothScanner<T extends UUPeripheral>
             public void run()
             {
                 scanFilters = filters;
+                outOfRangeScanFilters = outOfRangeFilters;
                 isScanning = true;
                 clearIgnoredDevices();
                 nearbyPeripheralCallback = callback;
@@ -86,7 +90,7 @@ public class UUBluetoothScanner<T extends UUPeripheral>
     {
         isScanning = false;
 
-        cancelNoResponseTimer();
+        stopOutOfRangeEvaluationTimer();
 
         UUThread.runOnMainThread(new Runnable()
         {
@@ -167,7 +171,7 @@ public class UUBluetoothScanner<T extends UUPeripheral>
             }
 
             bluetoothLeScanner.startScan(filters, settings, scanCallback);
-            kickNoResponseTimer();
+            startOutOfRangeEvaluationTimer();
         }
         catch (Exception ex)
         {
@@ -347,36 +351,23 @@ public class UUBluetoothScanner<T extends UUPeripheral>
         return true;
     }
 
-    private long noResponseTimeout = 500; // milliseconds
-    private long noResponseTimerFrequency = 250; // milliseconds
+    private static final String outOfRangeFilterEvaluationFrequencyTimerId = "UUBluetoothScanner_outOfRangeFilterEvaluationFrequency";
 
-    private static final String noResponseTimerId = "UUBluetoothScanner_NoResponseTimerId";
-
-    public long getNoResponseTimeout()
+    public long getOutOfRangeFilterEvaluationFrequency()
     {
-        return noResponseTimeout;
+        return outOfRangeFilterEvaluationFrequency;
     }
 
-    public void setNoResponseTimeout(long noResponseTimeout)
+    public void setOutOfRangeFilterEvaluationFrequency(long outOfRangeFilterEvaluationFrequency)
     {
-        this.noResponseTimeout = noResponseTimeout;
+        this.outOfRangeFilterEvaluationFrequency = outOfRangeFilterEvaluationFrequency;
     }
 
-    public long getNoResponseTimerFrequency()
+    private void startOutOfRangeEvaluationTimer()
     {
-        return noResponseTimerFrequency;
-    }
+        stopOutOfRangeEvaluationTimer();
 
-    public void setNoResponseTimerFrequency(long noResponseTimerFrequency)
-    {
-        this.noResponseTimerFrequency = noResponseTimerFrequency;
-    }
-
-    private void kickNoResponseTimer()
-    {
-        UUTimer.cancelActiveTimer(noResponseTimerId);
-
-        UUTimer t = new UUTimer(noResponseTimerId, noResponseTimerFrequency, true, null, (timer, userInfo) ->
+        UUTimer t = new UUTimer(outOfRangeFilterEvaluationFrequencyTimerId, outOfRangeFilterEvaluationFrequency, true, null, (timer, userInfo) ->
         {
             synchronized (nearbyPeripherals)
             {
@@ -385,13 +376,21 @@ public class UUBluetoothScanner<T extends UUPeripheral>
                 ArrayList<T> keep = new ArrayList<>();
                 for (T peripheral : nearbyPeripherals.values())
                 {
-                    if (peripheral.getTimeSinceLastUpdate() < noResponseTimeout)
+                    boolean outOfRange = false;
+
+                    for (UUOutOfRangePeripheralFilter<T> filter: outOfRangeScanFilters)
+                    {
+                        if (filter.checkPeripheralRange(peripheral) == UUOutOfRangePeripheralFilter.Result.OutOfRange)
+                        {
+                            outOfRange = true;
+                            didChange = true;
+                            break;
+                        }
+                    }
+
+                    if (!outOfRange)
                     {
                         keep.add(peripheral);
-                    }
-                    else
-                    {
-                        didChange = true;
                     }
                 }
 
@@ -413,9 +412,9 @@ public class UUBluetoothScanner<T extends UUPeripheral>
         t.start();
     }
 
-    private void cancelNoResponseTimer()
+    private void stopOutOfRangeEvaluationTimer()
     {
-        UUTimer.cancelActiveTimer(noResponseTimerId);
+        UUTimer.cancelActiveTimer(outOfRangeFilterEvaluationFrequencyTimerId);
     }
 
     private static void debugLog(final String method, final String message)

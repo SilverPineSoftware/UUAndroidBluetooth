@@ -13,7 +13,7 @@ public interface UUPeripheralFilter<T extends UUPeripheral>
         IgnoreOnce,
         IgnoreForever,
         Discover
-    };
+    }
 
     /**
      * Return true if the peripheral should be included in the scan results

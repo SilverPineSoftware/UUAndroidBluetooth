@@ -11,6 +11,7 @@ import androidx.core.util.Pair
 import androidx.lifecycle.ViewModel
 import androidx.recyclerview.widget.RecyclerView
 import com.silverpine.uu.bluetooth.UUBluetoothScanner
+import com.silverpine.uu.bluetooth.UUOutOfRangePeripheralFilter
 import com.silverpine.uu.bluetooth.UUPeripheral
 import com.silverpine.uu.bluetooth.UUPeripheralFilter
 import com.silverpine.uu.core.UUPermissions
@@ -141,7 +142,7 @@ class HomeActivity: UURecyclerActivity()
 
         adapter.update(listOf())
 
-        scanner.startScanning(null, arrayListOf(PeripheralFilter()))
+        scanner.startScanning(null, arrayListOf(PeripheralFilter()), arrayListOf(OutOfRangeFilter()))
         { list ->
 
             val timeSinceLastUpdate = System.currentTimeMillis() - this.lastUpdate
@@ -334,6 +335,21 @@ class HomeActivity: UURecyclerActivity()
             }
 
             return UUPeripheralFilter.Result.Discover;
+        }
+    }
+
+    inner class OutOfRangeFilter: UUOutOfRangePeripheralFilter<UUPeripheral>
+    {
+        override fun checkPeripheralRange(peripheral: UUPeripheral): UUOutOfRangePeripheralFilter.Result
+        {
+            if (peripheral.timeSinceLastUpdate > 500)
+            {
+                return UUOutOfRangePeripheralFilter.Result.OutOfRange
+            }
+            else
+            {
+                return UUOutOfRangePeripheralFilter.Result.InRange
+            }
         }
     }
 }
