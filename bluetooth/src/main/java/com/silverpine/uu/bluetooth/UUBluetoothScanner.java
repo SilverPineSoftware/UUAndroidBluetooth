@@ -11,16 +11,17 @@ import android.bluetooth.le.ScanResult;
 import android.bluetooth.le.ScanSettings;
 import android.content.Context;
 import android.os.ParcelUuid;
-import android.util.Log;
 
 import com.silverpine.uu.core.UUListDelegate;
 import com.silverpine.uu.core.UUThread;
+import com.silverpine.uu.core.UUTimer;
 import com.silverpine.uu.core.UUWorkerThread;
 import com.silverpine.uu.logging.UULog;
 
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.UUID;
 
 import androidx.annotation.NonNull;
@@ -84,6 +85,8 @@ public class UUBluetoothScanner<T extends UUPeripheral>
     public void stopScanning()
     {
         isScanning = false;
+
+        cancelNoResponseTimer();
 
         UUThread.runOnMainThread(new Runnable()
         {
@@ -164,6 +167,7 @@ public class UUBluetoothScanner<T extends UUPeripheral>
             }
 
             bluetoothLeScanner.startScan(filters, settings, scanCallback);
+            kickNoResponseTimer();
         }
         catch (Exception ex)
         {
@@ -272,7 +276,6 @@ public class UUBluetoothScanner<T extends UUPeripheral>
         });
 
         return list;
-
     }
 
     private void stopScan()
@@ -342,6 +345,77 @@ public class UUBluetoothScanner<T extends UUPeripheral>
         }
 
         return true;
+    }
+
+    private long noResponseTimeout = 500; // milliseconds
+    private long noResponseTimerFrequency = 250; // milliseconds
+
+    private static final String noResponseTimerId = "UUBluetoothScanner_NoResponseTimerId";
+
+    public long getNoResponseTimeout()
+    {
+        return noResponseTimeout;
+    }
+
+    public void setNoResponseTimeout(long noResponseTimeout)
+    {
+        this.noResponseTimeout = noResponseTimeout;
+    }
+
+    public long getNoResponseTimerFrequency()
+    {
+        return noResponseTimerFrequency;
+    }
+
+    public void setNoResponseTimerFrequency(long noResponseTimerFrequency)
+    {
+        this.noResponseTimerFrequency = noResponseTimerFrequency;
+    }
+
+    private void kickNoResponseTimer()
+    {
+        UUTimer.cancelActiveTimer(noResponseTimerId);
+
+        UUTimer t = new UUTimer(noResponseTimerId, noResponseTimerFrequency, true, null, (timer, userInfo) ->
+        {
+            synchronized (nearbyPeripherals)
+            {
+                boolean didChange = false;
+
+                ArrayList<T> keep = new ArrayList<>();
+                for (T peripheral : nearbyPeripherals.values())
+                {
+                    if (peripheral.getTimeSinceLastUpdate() < noResponseTimeout)
+                    {
+                        keep.add(peripheral);
+                    }
+                    else
+                    {
+                        didChange = true;
+                    }
+                }
+
+                nearbyPeripherals.clear();
+
+                for (T peripheral: keep)
+                {
+                    nearbyPeripherals.put(peripheral.getAddress(), peripheral);
+                }
+
+                if (didChange)
+                {
+                    ArrayList<T> sorted = sortedPeripherals();
+                    UUListDelegate.safeInvoke(nearbyPeripheralCallback, sorted);
+                }
+            }
+        });
+
+        t.start();
+    }
+
+    private void cancelNoResponseTimer()
+    {
+        UUTimer.cancelActiveTimer(noResponseTimerId);
     }
 
     private static void debugLog(final String method, final String message)
