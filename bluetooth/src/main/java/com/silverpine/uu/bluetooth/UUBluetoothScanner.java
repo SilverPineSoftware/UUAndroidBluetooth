@@ -255,15 +255,31 @@ public class UUBluetoothScanner<T extends UUPeripheral>
         }
 
         debugLog("handlePeripheralFound", "Peripheral Found: " + peripheral);
-        nearbyPeripherals.put(address, peripheral);
+
+        synchronized (nearbyPeripherals)
+        {
+            nearbyPeripherals.put(address, peripheral);
+        }
 
         ArrayList<T> sorted = sortedPeripherals();
         UUListDelegate.safeInvoke(nearbyPeripheralCallback, sorted);
     }
 
+    private ArrayList<T> nearbyPeripheralValues()
+    {
+        ArrayList<T> list;
+
+        synchronized (nearbyPeripherals)
+        {
+            list = new ArrayList<>(nearbyPeripherals.values());
+        }
+
+        return list;
+    }
+
     private ArrayList<T> sortedPeripherals()
     {
-        ArrayList<T> list = new ArrayList<>(nearbyPeripherals.values());
+        ArrayList<T> list = nearbyPeripheralValues();
         list.sort((lhs, rhs) ->
         {
             if (lhs.getRssi() > rhs.getRssi())
