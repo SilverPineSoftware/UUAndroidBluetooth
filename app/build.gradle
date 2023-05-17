@@ -48,6 +48,7 @@ android {
         viewBinding true
         dataBinding = true
     }
+    namespace 'com.silverpine.uu.sample.bluetooth'
 }
 
 dependencies {
