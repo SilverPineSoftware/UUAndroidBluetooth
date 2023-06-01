@@ -116,7 +116,7 @@ public class UUPeripheralOperation<T extends UUPeripheral>
         BluetoothGattCharacteristic discovered = findDiscoveredCharacteristic(uuid);
         if (discovered == null)
         {
-            UUError err = UUBluetoothError.operationFailedError("requireDiscoveredCharacteristic");
+            UUError err = UUBluetoothError.missingRequiredCharacteristic(uuid);
             end(err);
             return;
         }

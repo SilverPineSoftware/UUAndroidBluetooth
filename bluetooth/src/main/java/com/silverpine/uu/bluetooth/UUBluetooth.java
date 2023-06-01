@@ -307,6 +307,20 @@ public class UUBluetooth
         return "Unknown";
     }
 
+    public static void addBluetoothSpecName(final @NonNull UUID uuid, final @NonNull String name)
+    {
+        UUBluetoothConstants.BLUETOOTH_SPEC_NAMES.put(uuid, name);
+    }
+
+    public static void addBluetoothSpecName(final @NonNull String uuidString, final @NonNull String name)
+    {
+        UUID uuid = UUID.fromString(uuidString);
+        if (uuid != null)
+        {
+            UUBluetoothConstants.BLUETOOTH_SPEC_NAMES.put(uuid, name);
+        }
+    }
+
     /**
      * Formats a string with human friendly properties of BluetoothGattCharacteristics
      *

@@ -72,31 +72,38 @@ public enum UUBluetoothErrorCode
     @Nullable
     public String getErrorDescription()
     {
-        Context ctx = UUBluetooth.requireApplicationContext();
-        Resources rez = ctx.getResources();
-
-        switch (this)
+        try
         {
-            case Timeout:
-                return rez.getString(R.string.error_description_timeout);
+            Context ctx = UUBluetooth.requireApplicationContext();
+            Resources rez = ctx.getResources();
 
-            case NotConnected:
-                return rez.getString(R.string.error_description_not_connected);
+            switch (this)
+            {
+                case Timeout:
+                    return rez.getString(R.string.error_description_timeout);
 
-            case OperationFailed:
-                return rez.getString(R.string.error_description_operation_failed);
+                case NotConnected:
+                    return rez.getString(R.string.error_description_not_connected);
 
-            case ConnectionFailed:
-                return rez.getString(R.string.error_description_connection_failed);
+                case OperationFailed:
+                    return rez.getString(R.string.error_description_operation_failed);
 
-            case Disconnected:
-                return rez.getString(R.string.error_description_disconnected);
+                case ConnectionFailed:
+                    return rez.getString(R.string.error_description_connection_failed);
 
-            case PreconditionFailed:
-                return rez.getString(R.string.error_description_precondition_failed);
+                case Disconnected:
+                    return rez.getString(R.string.error_description_disconnected);
 
-            default:
-                return null;
+                case PreconditionFailed:
+                    return rez.getString(R.string.error_description_precondition_failed);
+
+                default:
+                    return null;
+            }
+        }
+        catch (Exception ex)
+        {
+            return this.toString();
         }
     }
 }

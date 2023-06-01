@@ -4,6 +4,8 @@ import android.bluetooth.BluetoothGatt;
 
 import com.silverpine.uu.core.UUError;
 
+import java.util.UUID;
+
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 
@@ -109,6 +111,14 @@ class UUBluetoothError
     {
         UUError err = makeError(UUBluetoothErrorCode.OperationFailed);
         err.addUserInfo(USER_INFO_KEY_METHOD_NAME, method);
+        return err;
+    }
+
+    public static @NonNull UUError missingRequiredCharacteristic(@NonNull final UUID characteristic)
+    {
+        UUError err = makeError(UUBluetoothErrorCode.OperationFailed);
+        err.addUserInfo(USER_INFO_KEY_METHOD_NAME, "requireDiscoveredCharacteristic");
+        err.addUserInfo("Missing Characteristic", characteristic.toString());
         return err;
     }
 
